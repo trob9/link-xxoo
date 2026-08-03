@@ -19,20 +19,30 @@ export async function claimUsername(
   }
   const username = parsed.data;
 
-  const existing = await prisma.profile.findUnique({ where: { username } });
-  if (existing) {
-    return { error: "That username is already taken" };
+  try {
+    await prisma.profile.create({
+      data: {
+        userId: user.id,
+        username,
+        displayName: user.name ?? username,
+        avatarUrl: user.image ?? null,
+        themePreset: "dawn",
+      },
+    });
+  } catch (error) {
+    // P2002: unique constraint violation — someone else claimed this
+    // username (or this user already has a profile) between our check and
+    // the write. Report it as a normal form error, not a crash.
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return { error: "That username is already taken" };
+    }
+    throw error;
   }
-
-  await prisma.profile.create({
-    data: {
-      userId: user.id,
-      username,
-      displayName: user.name ?? username,
-      avatarUrl: user.image ?? null,
-      themePreset: "dawn",
-    },
-  });
 
   redirect("/dashboard");
 }

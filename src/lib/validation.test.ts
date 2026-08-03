@@ -45,6 +45,21 @@ describe("linkSchema", () => {
     ).toThrow();
   });
 
+  it("rejects javascript: URIs (stored-XSS vector on the public link button)", () => {
+    expect(() =>
+      linkSchema.parse({ title: "XSS", url: "javascript:alert(1)" }),
+    ).toThrow();
+  });
+
+  it("rejects data: and vbscript: URIs", () => {
+    expect(() =>
+      linkSchema.parse({ title: "XSS", url: "data:text/html,<script>1</script>" }),
+    ).toThrow();
+    expect(() =>
+      linkSchema.parse({ title: "XSS", url: "vbscript:msgbox(1)" }),
+    ).toThrow();
+  });
+
   it("rejects an empty title", () => {
     expect(() =>
       linkSchema.parse({ title: "", url: "https://example.com" }),
@@ -74,6 +89,23 @@ describe("socialLinkSchema", () => {
     expect(() =>
       socialLinkSchema.parse({ platform: "myspace", url: "https://x.com" }),
     ).toThrow();
+  });
+
+  it("rejects a javascript: URI for a non-email platform", () => {
+    expect(() =>
+      socialLinkSchema.parse({ platform: "website", url: "javascript:alert(1)" }),
+    ).toThrow();
+  });
+
+  it("requires a valid email address for the email platform", () => {
+    expect(() =>
+      socialLinkSchema.parse({ platform: "email", url: "javascript:alert(1)" }),
+    ).toThrow();
+    const result = socialLinkSchema.parse({
+      platform: "email",
+      url: "hello@example.com",
+    });
+    expect(result.url).toBe("hello@example.com");
   });
 });
 

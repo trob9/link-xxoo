@@ -1,5 +1,7 @@
 "use client";
 
+import { buildVCard } from "@/lib/vcard";
+
 type Props = {
   username: string;
   displayName: string;
@@ -14,13 +16,14 @@ export default function SaveContact({
   email,
 }: Props) {
   function save() {
-    const lines = ["BEGIN:VCARD", "VERSION:3.0", `FN:${displayName}`];
-    if (bio) lines.push(`NOTE:${bio}`);
-    if (email) lines.push(`EMAIL:${email}`);
-    lines.push(`URL:${window.location.origin}/${username}`);
-    lines.push("END:VCARD");
+    const vcard = buildVCard({
+      displayName,
+      bio,
+      email,
+      url: `${window.location.origin}/${username}`,
+    });
 
-    const blob = new Blob([lines.join("\n")], { type: "text/vcard" });
+    const blob = new Blob([vcard], { type: "text/vcard" });
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
