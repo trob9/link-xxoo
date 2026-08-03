@@ -1,0 +1,13 @@
+services:
+  link-xxoo:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    volumes:
+      - link-xxoo-data:/app/data
+
+volumes:
+  link-xxoo-data:
