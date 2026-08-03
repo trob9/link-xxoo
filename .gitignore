@@ -39,3 +39,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# local sqlite db
+*.db
+*.db-journal
+
+# vendor-provided AI assistant skill bundles (not project code)
+/.agents/
+/.claude/
+/.windsurf/
+skills-lock.json
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

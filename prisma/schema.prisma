@@ -1,0 +1,92 @@
+// Prisma schema for link.xxoo.ooo
+// Auth is JWT-based (Discord OAuth via Auth.js) — no Account/Session tables needed,
+// we just upsert a User row keyed by discordId on sign-in.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String   @id @default(cuid())
+  discordId     String   @unique
+  discordAvatar String?
+  email         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  profile Profile?
+}
+
+model Profile {
+  id       String @id @default(cuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username String @unique
+
+  displayName      String
+  bio              String?
+  avatarUrl        String?
+  seoTitle         String?
+  seoDescription   String?
+  sensitiveContent Boolean @default(false)
+
+  themePreset String  @default("dawn")
+  themeConfig String? // JSON blob of ThemeConfig overrides
+
+  socialLinks SocialLink[]
+  links       Link[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SocialLink {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  platform  String
+  url       String
+  order     Int     @default(0)
+
+  @@index([profileId])
+}
+
+model Link {
+  id           String  @id @default(cuid())
+  profileId    String
+  profile      Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title        String
+  url          String
+  icon         String?
+  thumbnailUrl String?
+  enabled      Boolean @default(true)
+  featured     Boolean @default(false)
+  order        Int     @default(0)
+
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  clickCount Int @default(0)
+
+  clicks ClickEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId, order])
+}
+
+model ClickEvent {
+  id        String   @id @default(cuid())
+  linkId    String
+  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  referrer  String?
+
+  @@index([linkId, createdAt])
+}

@@ -1,26 +1,146 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Design direction: warm neobrutalism, not another blue/purple-gradient
+  SaaS template. Two neutrals (cream / charcoal) + one loud accent (coral),
+  acid-green used sparingly for success/data highlights. Hard 2px borders,
+  offset hard shadows (no blur), no rounded-full pills.
+*/
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  --surface-sunk: #efe6d4;
+  --surface: #fffdf8;
+  --surface-raised: #ffffff;
+  --ink: #211d1a;
+  --ink-muted: #6b6259;
+  --border-strong: #211d1a;
+  --action-primary: #ff5c39;
+  --action-primary-ink: #1c1108;
+  --accent-secondary: #9fd12b;
+  --accent-secondary-ink: #16210a;
+  --danger: #d6323e;
+  --danger-ink: #fff7f2;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --surface-sunk: #16130f;
+    --surface: #211c16;
+    --surface-raised: #2a241c;
+    --ink: #f5efe4;
+    --ink-muted: #a79c8d;
+    --border-strong: #f5efe4;
+    --action-primary: #ff7a53;
+    --action-primary-ink: #1c1108;
+    --accent-secondary: #c6ff4d;
+    --accent-secondary-ink: #16210a;
+    --danger: #ff6b6b;
+    --danger-ink: #2a0a0a;
   }
 }
 
+:root[data-theme="light"] {
+  --surface-sunk: #efe6d4;
+  --surface: #fffdf8;
+  --surface-raised: #ffffff;
+  --ink: #211d1a;
+  --ink-muted: #6b6259;
+  --border-strong: #211d1a;
+  --action-primary: #ff5c39;
+  --action-primary-ink: #1c1108;
+  --accent-secondary: #9fd12b;
+  --accent-secondary-ink: #16210a;
+  --danger: #d6323e;
+  --danger-ink: #fff7f2;
+}
+
+:root[data-theme="dark"] {
+  --surface-sunk: #16130f;
+  --surface: #211c16;
+  --surface-raised: #2a241c;
+  --ink: #f5efe4;
+  --ink-muted: #a79c8d;
+  --border-strong: #f5efe4;
+  --action-primary: #ff7a53;
+  --action-primary-ink: #1c1108;
+  --accent-secondary: #c6ff4d;
+  --accent-secondary-ink: #16210a;
+  --danger: #ff6b6b;
+  --danger-ink: #2a0a0a;
+}
+
+@theme inline {
+  --color-surface-sunk: var(--surface-sunk);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-border-strong: var(--border-strong);
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-ink: var(--action-primary-ink);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-ink: var(--accent-secondary-ink);
+  --color-danger: var(--danger);
+  --color-danger-ink: var(--danger-ink);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-stat: var(--font-stat);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+.font-stat {
+  font-family: var(--font-stat), monospace;
+}
+
+/* Neobrutalist hard-edge primitives — flat shadows, no blur, no gradients. */
+
+.border-hard {
+  border: 2px solid var(--border-strong);
+}
+
+.shadow-hard {
+  box-shadow: 4px 4px 0 0 var(--border-strong);
+}
+
+.shadow-hard-sm {
+  box-shadow: 3px 3px 0 0 var(--border-strong);
+}
+
+.press-hard {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.press-hard:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--border-strong);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise-in {
+  animation: rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
