@@ -1,4 +1,5 @@
-export type ButtonStyle = "hard" | "soft" | "outline";
+export const BUTTON_STYLES = ["hard", "soft", "outline"] as const;
+export type ButtonStyle = (typeof BUTTON_STYLES)[number];
 
 export type ThemeConfig = {
   background: string;

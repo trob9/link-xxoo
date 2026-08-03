@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
+import { fieldClasses, Input, Label } from "@/components/ui/input";
 import { SOCIAL_PLATFORMS } from "@/lib/validation";
 import {
   addSocialLink,
@@ -66,7 +66,7 @@ export function SocialLinksManager({ socials }: { socials: DashboardSocial[] }) 
           <select
             id="platform"
             name="platform"
-            className="w-full rounded-md border-hard bg-surface-raised px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-action-primary"
+            className={fieldClasses}
           >
             {SOCIAL_PLATFORMS.map((platform) => (
               <option key={platform} value={platform}>

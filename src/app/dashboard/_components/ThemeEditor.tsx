@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/input";
 import {
+  BUTTON_STYLES,
+  getThemePreset,
   THEME_PRESETS,
   type ButtonStyle,
   type ThemePreset,
@@ -13,7 +15,6 @@ import {
 import { updateTheme, type ThemeState } from "../theme/actions";
 
 const initialState: ThemeState = {};
-const BUTTON_STYLES: ButtonStyle[] = ["hard", "soft", "outline"];
 
 export function ThemeEditor({
   currentPreset,
@@ -27,9 +28,7 @@ export function ThemeEditor({
   const [selected, setSelected] = useState(currentPreset);
   const [state, formAction, pending] = useActionState(updateTheme, initialState);
 
-  const activeConfig = (
-    THEME_PRESETS.find((p) => p.key === selected) ?? THEME_PRESETS[0]
-  ).config;
+  const activeConfig = getThemePreset(selected).config;
 
   const [accentEnabled, setAccentEnabled] = useState(accentOverride !== null);
   const [accent, setAccent] = useState(accentOverride ?? activeConfig.accent);

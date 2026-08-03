@@ -1,7 +1,7 @@
 import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-const fieldClasses =
+export const fieldClasses =
   "w-full bg-surface-raised border-hard rounded-md px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-action-primary";
 
 export const Input = forwardRef<

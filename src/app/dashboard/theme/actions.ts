@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
+import { revalidateProfilePages } from "@/lib/revalidate";
 import {
+  BUTTON_STYLES,
   getThemePreset,
   THEME_PRESETS,
   type ButtonStyle,
@@ -12,7 +13,6 @@ import {
 
 export type ThemeState = { ok?: boolean; error?: string };
 
-const BUTTON_STYLES: ButtonStyle[] = ["hard", "soft", "outline"];
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 export async function updateTheme(
@@ -54,7 +54,6 @@ export async function updateTheme(
     data: { themePreset: presetKey, themeConfig },
   });
 
-  revalidatePath("/dashboard/theme");
-  revalidatePath("/" + profile.username);
+  revalidateProfilePages("/dashboard/theme", profile.username);
   return { ok: true };
 }

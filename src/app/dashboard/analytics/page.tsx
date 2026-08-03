@@ -9,23 +9,25 @@ function dayKey(d: Date) {
 export default async function AnalyticsPage() {
   const { profile } = await requireProfile();
 
-  const links = await prisma.link.findMany({
-    where: { profileId: profile.id },
-    orderBy: { clickCount: "desc" },
-    select: { id: true, title: true, clickCount: true },
-  });
-
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
   fourteenDaysAgo.setHours(0, 0, 0, 0);
 
-  const events = await prisma.clickEvent.findMany({
-    where: {
-      link: { profileId: profile.id },
-      createdAt: { gte: fourteenDaysAgo },
-    },
-    select: { createdAt: true },
-  });
+  // Independent queries (both only need profile.id) — run concurrently.
+  const [links, events] = await Promise.all([
+    prisma.link.findMany({
+      where: { profileId: profile.id },
+      orderBy: { clickCount: "desc" },
+      select: { id: true, title: true, clickCount: true },
+    }),
+    prisma.clickEvent.findMany({
+      where: {
+        link: { profileId: profile.id },
+        createdAt: { gte: fourteenDaysAgo },
+      },
+      select: { createdAt: true },
+    }),
+  ]);
 
   const counts = events.reduce<Record<string, number>>((acc, e) => {
     const key = dayKey(e.createdAt);

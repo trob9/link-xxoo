@@ -1,7 +1,9 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { linkVisibilityWhere } from "@/lib/links";
 import {
   resolveThemeConfig,
   DISPLAY_FONT_STACK,
@@ -12,15 +14,38 @@ import SensitiveGate from "./_components/SensitiveGate";
 import SaveContact from "./_components/SaveContact";
 import SocialIcons from "./_components/SocialIcons";
 
-async function getProfile(username: string) {
+// generateMetadata only needs scalar profile fields — deliberately lighter
+// than the display query below, which joins links/socialLinks.
+const getProfileMeta = cache((username: string) =>
+  prisma.profile.findUnique({
+    where: { username },
+    select: {
+      displayName: true,
+      bio: true,
+      seoTitle: true,
+      seoDescription: true,
+      avatarUrl: true,
+    },
+  }),
+);
+
+const getProfileForDisplay = cache(async (username: string) => {
+  const now = new Date();
   return prisma.profile.findUnique({
     where: { username },
     include: {
-      links: { orderBy: { order: "asc" } },
+      links: {
+        where: linkVisibilityWhere(now),
+        orderBy: [{ featured: "desc" }, { order: "asc" }],
+      },
       socialLinks: { orderBy: { order: "asc" } },
     },
   });
-}
+});
+
+type ProfileCSSVars = React.CSSProperties & {
+  [key: `--pt-${string}`]: string;
+};
 
 export async function generateMetadata({
   params,
@@ -28,7 +53,7 @@ export async function generateMetadata({
   params: Promise<{ username: string }>;
 }): Promise<Metadata> {
   const { username } = await params;
-  const profile = await getProfile(username);
+  const profile = await getProfileMeta(username);
   if (!profile) return { title: "Profile not found" };
 
   const title = profile.seoTitle || profile.displayName;
@@ -51,7 +76,7 @@ export default async function ProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const profile = await getProfile(username);
+  const profile = await getProfileForDisplay(username);
   if (!profile) notFound();
 
   const theme = resolveThemeConfig(
@@ -61,32 +86,19 @@ export default async function ProfilePage({
       : null,
   );
 
-  // Server Component: runs once per request on the server, not subject to
-  // the client re-render purity rules this lint rule otherwise rightly enforces.
-  // eslint-disable-next-line react-hooks/purity
-  const now = Date.now();
-  const visibleLinks = profile.links
-    .filter(
-      (link) =>
-        link.enabled &&
-        (!link.startsAt || link.startsAt.getTime() <= now) &&
-        (!link.endsAt || link.endsAt.getTime() >= now),
-    )
-    .sort((a, b) => Number(b.featured) - Number(a.featured));
-
   const emailSocial = profile.socialLinks.find((s) => s.platform === "email");
 
-  const containerStyle = {
-    ["--pt-bg" as keyof React.CSSProperties]: theme.background,
-    ["--pt-surface" as keyof React.CSSProperties]: theme.surface,
-    ["--pt-ink" as keyof React.CSSProperties]: theme.ink,
-    ["--pt-ink-muted" as keyof React.CSSProperties]: theme.inkMuted,
-    ["--pt-accent" as keyof React.CSSProperties]: theme.accent,
-    ["--pt-accent-ink" as keyof React.CSSProperties]: theme.accentInk,
+  const containerStyle: ProfileCSSVars = {
+    "--pt-bg": theme.background,
+    "--pt-surface": theme.surface,
+    "--pt-ink": theme.ink,
+    "--pt-ink-muted": theme.inkMuted,
+    "--pt-accent": theme.accent,
+    "--pt-accent-ink": theme.accentInk,
     fontFamily: DISPLAY_FONT_STACK[theme.displayFont],
     background: "var(--pt-bg)",
     color: "var(--pt-ink)",
-  } as React.CSSProperties;
+  };
 
   const body = (
     <div className="animate-rise-in mt-8 flex flex-col items-stretch gap-3">
@@ -99,7 +111,7 @@ export default async function ProfilePage({
         </p>
       )}
 
-      {visibleLinks.map((link) => (
+      {profile.links.map((link) => (
         <LinkButton
           key={link.id}
           id={link.id}

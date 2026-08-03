@@ -1,15 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { profileSettingsSchema, socialLinkSchema } from "@/lib/validation";
+import { nullIfBlank } from "@/lib/forms";
+import { revalidateProfilePages } from "@/lib/revalidate";
 
 export type SettingsState = { ok?: boolean; error?: string };
 
-function nullIfBlank(value: FormDataEntryValue | null): string | null {
-  const s = String(value ?? "").trim();
-  return s === "" ? null : s;
+function revalidateSettings(username: string) {
+  revalidateProfilePages("/dashboard/settings", username);
 }
 
 export async function updateProfileSettings(
@@ -40,8 +40,7 @@ export async function updateProfileSettings(
     },
   });
 
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/" + profile.username);
+  revalidateSettings(profile.username);
   return { ok: true };
 }
 
@@ -74,8 +73,7 @@ export async function addSocialLink(
     },
   });
 
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/" + profile.username);
+  revalidateSettings(profile.username);
   return { ok: true };
 }
 
@@ -84,6 +82,5 @@ export async function deleteSocialLink(id: string): Promise<void> {
   await prisma.socialLink.deleteMany({
     where: { id, profileId: profile.id },
   });
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/" + profile.username);
+  revalidateSettings(profile.username);
 }

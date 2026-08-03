@@ -1,31 +1,27 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { linkSchema } from "@/lib/validation";
+import { nullIfBlank } from "@/lib/forms";
+import { revalidateProfilePages } from "@/lib/revalidate";
 
 export type FormState = { ok?: boolean; error?: string };
 
 function revalidateProfile(username: string) {
-  revalidatePath("/dashboard");
-  revalidatePath("/" + username);
+  revalidateProfilePages("/dashboard", username);
 }
 
 // datetime-local inputs submit "" when empty; z.coerce.date() would choke on
 // that, so normalise blanks to null before validating.
 function parseLinkForm(formData: FormData) {
-  const rawStart = String(formData.get("startsAt") ?? "").trim();
-  const rawEnd = String(formData.get("endsAt") ?? "").trim();
-  const rawIcon = String(formData.get("icon") ?? "").trim();
-
   return linkSchema.safeParse({
     title: formData.get("title"),
     url: formData.get("url"),
-    icon: rawIcon === "" ? null : rawIcon,
+    icon: nullIfBlank(formData.get("icon")),
     featured: formData.get("featured") === "on",
-    startsAt: rawStart === "" ? null : rawStart,
-    endsAt: rawEnd === "" ? null : rawEnd,
+    startsAt: nullIfBlank(formData.get("startsAt")),
+    endsAt: nullIfBlank(formData.get("endsAt")),
   });
 }
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { linkVisibilityWhere } from "@/lib/links";
 
 export async function POST(
   request: Request,
@@ -6,22 +7,14 @@ export async function POST(
 ) {
   const { id } = await params;
   const referrer = request.headers.get("referer");
-  const now = new Date();
 
   try {
-    // Scope to links that are currently visible on the public page (same
-    // enabled/schedule predicate as src/app/[username]/page.tsx) so a link
-    // that's been disabled or scheduled out can't still rack up clicks via
-    // a direct POST to a previously-seen link id.
+    // Scope to links that are currently visible on the public page (shared
+    // predicate — see src/lib/links.ts) so a link that's been disabled or
+    // scheduled out can't still rack up clicks via a direct POST to a
+    // previously-seen link id.
     const { count } = await prisma.link.updateMany({
-      where: {
-        id,
-        enabled: true,
-        AND: [
-          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
-          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
-        ],
-      },
+      where: { id, ...linkVisibilityWhere(new Date()) },
       data: { clickCount: { increment: 1 } },
     });
 

@@ -1,5 +1,4 @@
 import { signOut } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { DashboardNav } from "./_components/DashboardNav";
 
@@ -9,10 +8,6 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { profile } = await requireProfile();
-  const user = await prisma.user.findUnique({
-    where: { id: profile.userId },
-    select: { discordAvatar: true },
-  });
 
   async function doSignOut() {
     "use server";
@@ -26,7 +21,7 @@ export default async function DashboardLayout({
           <DashboardNav
             username={profile.username}
             displayName={profile.displayName}
-            avatarUrl={user?.discordAvatar ?? null}
+            avatarUrl={profile.user.discordAvatar ?? null}
             signOutAction={doSignOut}
           />
         </div>
