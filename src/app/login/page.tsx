@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Panel } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { discordSignIn } from "./actions";
 
 export default async function LoginPage({
@@ -10,7 +11,7 @@ export default async function LoginPage({
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
   const { callbackUrl } = await searchParams;
-  const destination = callbackUrl || "/dashboard";
+  const destination = safeRedirectPath(callbackUrl);
 
   const session = await auth();
   if (session?.user) redirect(destination);
