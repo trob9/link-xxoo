@@ -86,3 +86,7 @@ Postgres instance — the rest of the app is unaffected.
   rather than the older embedded query-engine binary.
 - **Tailwind v4**: CSS-first config — there's no `tailwind.config.*`, design
   tokens live in `src/app/globals.css`.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
