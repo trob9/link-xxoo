@@ -1,4 +1,4 @@
-export const BUTTON_STYLES = ["hard", "soft", "outline"] as const;
+export const BUTTON_STYLES = ["raised", "flat", "outline"] as const;
 export type ButtonStyle = (typeof BUTTON_STYLES)[number];
 
 export type ThemeConfig = {
@@ -34,7 +34,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       inkMuted: "#6b6259",
       accent: "#ff5c39",
       accentInk: "#1c1108",
-      buttonStyle: "hard",
+      buttonStyle: "raised",
       displayFont: "fraunces",
     },
   },
@@ -49,7 +49,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       inkMuted: "#a79c8d",
       accent: "#c6ff4d",
       accentInk: "#16210a",
-      buttonStyle: "hard",
+      buttonStyle: "raised",
       displayFont: "space-grotesk",
     },
   },
@@ -64,7 +64,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       inkMuted: "#5c5470",
       accent: "#ff3d7f",
       accentInk: "#fff7fa",
-      buttonStyle: "soft",
+      buttonStyle: "flat",
       displayFont: "fraunces",
     },
   },
@@ -94,7 +94,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       inkMuted: "#8b93b8",
       accent: "#4dd6ff",
       accentInk: "#03131a",
-      buttonStyle: "hard",
+      buttonStyle: "raised",
       displayFont: "space-grotesk",
     },
   },
@@ -109,7 +109,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       inkMuted: "#7a6a3f",
       accent: "#ff9f1c",
       accentInk: "#2a1d05",
-      buttonStyle: "soft",
+      buttonStyle: "flat",
       displayFont: "fraunces",
     },
   },

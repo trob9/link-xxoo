@@ -57,8 +57,8 @@ export default function LinkButton({
     ink: "var(--pt-ink)",
   });
 
-  // The press-down interaction only applies to the "hard" style's shadow.
-  if (buttonStyle === "hard" && pressed) {
+  // The press-down interaction only applies to the "raised" style's shadow.
+  if (buttonStyle === "raised" && pressed) {
     variant.boxShadow = "none";
     variant.transform = "translate(4px, 4px)";
   }
@@ -69,7 +69,7 @@ export default function LinkButton({
       target="_blank"
       rel="noopener noreferrer"
       onClick={fireBeacon}
-      onPointerDown={() => buttonStyle === "hard" && setPressed(true)}
+      onPointerDown={() => buttonStyle === "raised" && setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onPointerCancel={() => setPressed(false)}
