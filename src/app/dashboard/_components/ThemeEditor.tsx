@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/input";
+import { buttonStyleVariant } from "@/lib/button-style";
 import {
   BUTTON_STYLES,
   getThemePreset,
@@ -82,15 +83,15 @@ export function ThemeEditor({
 
         <div>
           <Label>Button style</Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {BUTTON_STYLES.map((style) => (
               <label
                 key={style}
                 className={cn(
-                  "cursor-pointer rounded-md border-2 px-4 py-2 text-sm font-semibold uppercase tracking-wide",
+                  "flex cursor-pointer flex-col items-center gap-3 rounded-md border-2 p-4",
                   buttonStyle === style
-                    ? "border-border-strong bg-action-primary text-action-primary-ink shadow-hard-sm"
-                    : "border-border-strong bg-surface text-ink",
+                    ? "border-border-strong bg-surface shadow-hard-sm ring-2 ring-action-primary"
+                    : "border-border-strong bg-surface hover:-translate-y-0.5",
                 )}
               >
                 <input
@@ -101,7 +102,15 @@ export function ThemeEditor({
                   onChange={() => setButtonStyle(style)}
                   className="sr-only"
                 />
-                {style}
+                <ButtonStylePreview
+                  style={style}
+                  accent={accentEnabled ? accent : activeConfig.accent}
+                  accentInk={activeConfig.accentInk}
+                  ink={activeConfig.ink}
+                />
+                <span className="text-xs font-semibold uppercase tracking-wide text-ink">
+                  {style}
+                </span>
               </label>
             ))}
           </div>
@@ -123,6 +132,27 @@ export function ThemeEditor({
         {pending ? "Saving…" : "Save theme"}
       </Button>
     </form>
+  );
+}
+
+function ButtonStylePreview({
+  style,
+  accent,
+  accentInk,
+  ink,
+}: {
+  style: ButtonStyle;
+  accent: string;
+  accentInk: string;
+  ink: string;
+}) {
+  return (
+    <div
+      className="pointer-events-none flex w-full items-center justify-center px-3 py-2.5 text-xs font-semibold"
+      style={buttonStyleVariant(style, { accent, accentInk, ink })}
+    >
+      Your link
+    </div>
   );
 }
 

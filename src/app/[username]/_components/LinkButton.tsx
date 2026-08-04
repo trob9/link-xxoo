@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import type { ButtonStyle } from "@/lib/themes";
+import { buttonStyleVariant } from "@/lib/button-style";
 
 type Props = {
   id: string;
@@ -50,30 +51,16 @@ export default function LinkButton({
     transition: "transform 60ms ease, box-shadow 60ms ease",
   };
 
-  let variant: CSSProperties;
-  if (buttonStyle === "hard") {
-    variant = {
-      background: "var(--pt-accent)",
-      color: "var(--pt-accent-ink)",
-      border: "2px solid var(--pt-ink)",
-      borderRadius: 10,
-      boxShadow: pressed ? "none" : "4px 4px 0 0 var(--pt-ink)",
-      transform: pressed ? "translate(4px, 4px)" : "none",
-    };
-  } else if (buttonStyle === "soft") {
-    variant = {
-      background: "var(--pt-accent)",
-      color: "var(--pt-accent-ink)",
-      border: "none",
-      borderRadius: 14,
-    };
-  } else {
-    variant = {
-      background: "transparent",
-      color: "var(--pt-ink)",
-      border: "2px solid var(--pt-accent)",
-      borderRadius: 10,
-    };
+  const variant: CSSProperties = buttonStyleVariant(buttonStyle, {
+    accent: "var(--pt-accent)",
+    accentInk: "var(--pt-accent-ink)",
+    ink: "var(--pt-ink)",
+  });
+
+  // The press-down interaction only applies to the "hard" style's shadow.
+  if (buttonStyle === "hard" && pressed) {
+    variant.boxShadow = "none";
+    variant.transform = "translate(4px, 4px)";
   }
 
   return (
