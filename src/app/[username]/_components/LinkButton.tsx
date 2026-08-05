@@ -9,6 +9,7 @@ type Props = {
   id: string;
   title: string;
   url: string;
+  icon: string | null;
   featured: boolean;
   buttonStyle: ButtonStyle;
 };
@@ -17,6 +18,7 @@ export default function LinkButton({
   id,
   title,
   url,
+  icon,
   featured,
   buttonStyle,
 }: Props) {
@@ -75,6 +77,11 @@ export default function LinkButton({
       onPointerCancel={() => setPressed(false)}
       style={{ ...base, ...variant }}
     >
+      {icon ? (
+        <span aria-hidden className="mr-2">
+          {icon}
+        </span>
+      ) : null}
       <span>{title}</span>
       {featured && (
         <span

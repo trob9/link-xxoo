@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   linkSchema,
+  normalizeSocialUrl,
   profileSettingsSchema,
   socialLinkSchema,
   usernameSchema,
@@ -74,6 +75,44 @@ describe("linkSchema", () => {
     });
     expect(result.startsAt).toBeInstanceOf(Date);
   });
+
+  it("accepts a single emoji as the icon", () => {
+    const result = linkSchema.parse({
+      title: "Music",
+      url: "https://example.com",
+      icon: "🎵",
+    });
+    expect(result.icon).toBe("🎵");
+  });
+
+  it("accepts a null/omitted icon", () => {
+    const result = linkSchema.parse({
+      title: "No icon",
+      url: "https://example.com",
+      icon: null,
+    });
+    expect(result.icon).toBeNull();
+  });
+
+  it("rejects plain text as the icon", () => {
+    expect(() =>
+      linkSchema.parse({
+        title: "Bad icon",
+        url: "https://example.com",
+        icon: "music",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects multiple emoji as the icon", () => {
+    expect(() =>
+      linkSchema.parse({
+        title: "Two emoji",
+        url: "https://example.com",
+        icon: "🎵🔥",
+      }),
+    ).toThrow();
+  });
 });
 
 describe("socialLinkSchema", () => {
@@ -106,6 +145,60 @@ describe("socialLinkSchema", () => {
       url: "hello@example.com",
     });
     expect(result.url).toBe("hello@example.com");
+  });
+
+  it("only allows partner-site links for a restricted platform", () => {
+    expect(() =>
+      socialLinkSchema.parse({
+        platform: "instagram",
+        url: "https://not-instagram-at-all.com/example",
+      }),
+    ).toThrow();
+
+    const result = socialLinkSchema.parse({
+      platform: "instagram",
+      url: "https://www.instagram.com/example",
+    });
+    expect(result.url).toBe("https://www.instagram.com/example");
+  });
+
+  it("accepts facebook.com links for the facebook platform", () => {
+    const result = socialLinkSchema.parse({
+      platform: "facebook",
+      url: "https://www.facebook.com/example",
+    });
+    expect(result.platform).toBe("facebook");
+  });
+
+  it("rejects a non-facebook link for the facebook platform", () => {
+    expect(() =>
+      socialLinkSchema.parse({
+        platform: "facebook",
+        url: "https://instagram.com/example",
+      }),
+    ).toThrow();
+  });
+
+  it("accepts any http(s) URL for the generic website platform", () => {
+    const result = socialLinkSchema.parse({
+      platform: "website",
+      url: "https://anything-at-all.example",
+    });
+    expect(result.platform).toBe("website");
+  });
+});
+
+describe("normalizeSocialUrl", () => {
+  it("https-normalizes URL-based platforms", () => {
+    expect(normalizeSocialUrl("instagram", "instagram.com/example")).toBe(
+      "https://instagram.com/example",
+    );
+  });
+
+  it("leaves an email address alone (not treated as a URL)", () => {
+    expect(normalizeSocialUrl("email", "hello@example.com")).toBe(
+      "hello@example.com",
+    );
   });
 });
 

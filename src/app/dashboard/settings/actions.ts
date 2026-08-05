@@ -2,7 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
-import { profileSettingsSchema, socialLinkSchema } from "@/lib/validation";
+import {
+  normalizeSocialUrl,
+  profileSettingsSchema,
+  socialLinkSchema,
+} from "@/lib/validation";
 import { nullIfBlank } from "@/lib/forms";
 import { revalidateProfilePages } from "@/lib/revalidate";
 
@@ -50,9 +54,10 @@ export async function addSocialLink(
 ): Promise<SettingsState> {
   const { profile } = await requireProfile();
 
+  const rawPlatform = String(formData.get("platform") ?? "");
   const parsed = socialLinkSchema.safeParse({
-    platform: formData.get("platform"),
-    url: formData.get("url"),
+    platform: rawPlatform,
+    url: normalizeSocialUrl(rawPlatform, String(formData.get("url") ?? "")),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid social link" };

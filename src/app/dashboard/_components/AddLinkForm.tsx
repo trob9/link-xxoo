@@ -3,6 +3,8 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { normalizeUrlOnBlur } from "@/lib/normalize-url-on-blur";
 import { createLink, type FormState } from "../actions";
 
 const initialState: FormState = {};
@@ -47,11 +49,18 @@ export function AddLinkForm() {
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="add-url">URL</Label>
-          <Input id="add-url" name="url" type="url" required placeholder="https://…" />
+          <Input
+            id="add-url"
+            name="url"
+            type="text"
+            required
+            placeholder="yoursite.com"
+            onBlur={normalizeUrlOnBlur}
+          />
         </div>
         <div>
           <Label htmlFor="add-icon">Icon / emoji (optional)</Label>
-          <Input id="add-icon" name="icon" maxLength={40} placeholder="🎵" />
+          <EmojiPicker id="add-icon" name="icon" />
         </div>
         <div className="flex items-end pb-1">
           <label className="flex items-center gap-2 text-sm font-medium">

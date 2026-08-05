@@ -28,6 +28,7 @@ async function main() {
   });
 
   await prisma.link.deleteMany({ where: { profileId: profile.id } });
+  await prisma.socialLink.deleteMany({ where: { profileId: profile.id } });
   await prisma.link.create({
     data: {
       profileId: profile.id,

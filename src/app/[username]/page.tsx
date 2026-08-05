@@ -117,6 +117,7 @@ export default async function ProfilePage({
           id={link.id}
           title={link.title}
           url={link.url}
+          icon={link.icon}
           featured={link.featured}
           buttonStyle={theme.buttonStyle}
         />

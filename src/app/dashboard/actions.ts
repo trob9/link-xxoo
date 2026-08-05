@@ -5,6 +5,7 @@ import { requireProfile } from "@/lib/session";
 import { linkSchema } from "@/lib/validation";
 import { nullIfBlank } from "@/lib/forms";
 import { revalidateProfilePages } from "@/lib/revalidate";
+import { normalizeUrlInput } from "@/lib/url-normalize";
 
 export type FormState = { ok?: boolean; error?: string };
 
@@ -17,7 +18,7 @@ function revalidateProfile(username: string) {
 function parseLinkForm(formData: FormData) {
   return linkSchema.safeParse({
     title: formData.get("title"),
-    url: formData.get("url"),
+    url: normalizeUrlInput(String(formData.get("url") ?? "")),
     icon: nullIfBlank(formData.get("icon")),
     featured: formData.get("featured") === "on",
     startsAt: nullIfBlank(formData.get("startsAt")),

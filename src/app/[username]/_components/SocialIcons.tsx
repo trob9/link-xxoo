@@ -53,6 +53,11 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M4.98 3.5A2.5 2.5 0 002.5 6a2.5 2.5 0 002.48 2.5A2.5 2.5 0 007.5 6a2.5 2.5 0 00-2.52-2.5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.85V21H9z" />
     </svg>
   ),
+  facebook: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M15 3h-2.5C9.46 3 8 4.46 8 7.5V10H5v4h3v7h4v-7h3.2l.6-4H12V7.7c0-1.02.3-1.7 1.74-1.7H15V3z" />
+    </svg>
+  ),
   website: (
     <svg {...stroke}>
       <circle cx="12" cy="12" r="9" />

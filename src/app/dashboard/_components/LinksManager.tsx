@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { normalizeUrlOnBlur } from "@/lib/normalize-url-on-blur";
 import {
   deleteLink,
   reorderLinks,
@@ -270,11 +272,18 @@ function EditLinkForm({
       </div>
       <div className="sm:col-span-2">
         <Label htmlFor={`u-${link.id}`}>URL</Label>
-        <Input id={`u-${link.id}`} name="url" type="url" defaultValue={link.url} required />
+        <Input
+          id={`u-${link.id}`}
+          name="url"
+          type="text"
+          defaultValue={link.url}
+          required
+          onBlur={normalizeUrlOnBlur}
+        />
       </div>
       <div>
         <Label htmlFor={`i-${link.id}`}>Icon / emoji</Label>
-        <Input id={`i-${link.id}`} name="icon" defaultValue={link.icon ?? ""} maxLength={40} />
+        <EmojiPicker id={`i-${link.id}`} name="icon" defaultValue={link.icon} />
       </div>
       <div className="flex items-end pb-1">
         <label className="flex items-center gap-2 text-sm font-medium">
