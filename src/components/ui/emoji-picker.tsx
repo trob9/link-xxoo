@@ -43,7 +43,7 @@ export function EmojiPicker({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
-          placeholder="🙂"
+          placeholder="⭐"
           maxLength={16}
           className={cn(
             "h-10 w-16 rounded-md border-hard bg-surface-raised px-2 text-center text-lg focus:outline-none focus:ring-2 focus:ring-action-primary",

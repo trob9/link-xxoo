@@ -206,7 +206,7 @@ function SortableLinkRow({ link }: { link: DashboardLink }) {
           }}
         />
 
-        <div className="flex shrink-0 gap-1">
+        <div className="flex shrink-0 gap-[5px]">
           <Button
             variant={featured ? "primary" : "ghost"}
             size="sm"
@@ -282,7 +282,7 @@ function EditLinkForm({
         />
       </div>
       <div>
-        <Label htmlFor={`i-${link.id}`}>Icon / emoji</Label>
+        <Label htmlFor={`i-${link.id}`}>Emoji (optional)</Label>
         <EmojiPicker id={`i-${link.id}`} name="icon" defaultValue={link.icon} />
       </div>
       <div className="flex items-end pb-1">

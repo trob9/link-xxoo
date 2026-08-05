@@ -59,7 +59,7 @@ export function AddLinkForm() {
           />
         </div>
         <div>
-          <Label htmlFor="add-icon">Icon / emoji (optional)</Label>
+          <Label htmlFor="add-icon">Emoji (optional)</Label>
           <EmojiPicker id="add-icon" name="icon" />
         </div>
         <div className="flex items-end pb-1">
