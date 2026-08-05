@@ -33,6 +33,13 @@ RUN npm run build
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# bookworm-slim ships without libssl; Prisma's schema engine
+# (schema-engine-debian-openssl-3.0.x, bundled in @prisma/engines) needs it,
+# and without it Prisma tries to fetch a different engine at runtime and
+# fails ("Can't write to node_modules/@prisma/engines") since it runs as the
+# unprivileged nextjs user. Installing openssl lets it use the bundled engine.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
