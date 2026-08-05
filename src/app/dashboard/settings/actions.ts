@@ -10,7 +10,11 @@ import {
 } from "@/lib/validation";
 import { nullIfBlank } from "@/lib/forms";
 import { revalidateProfilePages } from "@/lib/revalidate";
-import { AVATAR_MAX_UPLOAD_BYTES, processAvatarImage } from "@/lib/avatar";
+import {
+  AVATAR_MAX_UPLOAD_BYTES,
+  isSafeRasterImage,
+  processAvatarImage,
+} from "@/lib/avatar";
 
 export type SettingsState = { ok?: boolean; error?: string };
 
@@ -115,11 +119,18 @@ export async function updateAvatar(
     if (file.size > AVATAR_MAX_UPLOAD_BYTES) {
       return { error: "Image must be under 8MB" };
     }
+    // file.type is just the client-declared Content-Type of that form-data
+    // part — a cheap, friendly early check, not a security boundary (a
+    // direct API call can claim anything). isSafeRasterImage checks actual
+    // file content below and is the real gate.
     if (!file.type.startsWith("image/")) {
       return { error: "That doesn't look like an image" };
     }
+    const input = Buffer.from(await file.arrayBuffer());
+    if (!isSafeRasterImage(input)) {
+      return { error: "Unsupported image format — use JPEG, PNG, GIF, or WebP" };
+    }
     try {
-      const input = Buffer.from(await file.arrayBuffer());
       avatarImage = await processAvatarImage(input);
     } catch {
       return { error: "Couldn't read that image — try a different file" };

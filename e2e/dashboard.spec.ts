@@ -158,6 +158,27 @@ test.describe("authenticated dashboard", () => {
     await expect(avatarImg).toHaveCSS("border-radius", "0px");
   });
 
+  test("rejects an SVG upload (script tag + SSRF-shaped external reference) even through the real UI", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/settings");
+
+    await page.setInputFiles(
+      'input[type="file"][name="avatar"]',
+      "e2e/fixtures/malicious.svg",
+    );
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+
+    await expect(page.getByText(/unsupported image format/i)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Remove photo" }),
+    ).toHaveCount(0);
+
+    // Nothing was ever stored.
+    const res = await page.request.get("/api/avatar/e2e-tester/1");
+    expect(res.status()).toBe(404);
+  });
+
   test("turning off the profile picture hides it from the public page", async ({
     page,
   }) => {

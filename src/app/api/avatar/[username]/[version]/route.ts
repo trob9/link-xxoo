@@ -25,6 +25,11 @@ export async function GET(
     headers: {
       "Content-Type": "image/webp",
       "Cache-Control": "public, max-age=31536000, immutable",
+      // Belt-and-suspenders: the stored bytes are always our own re-encoded
+      // WebP output, never a passthrough of user-uploaded bytes, but this
+      // stops a browser from ever MIME-sniffing this response as anything
+      // other than what Content-Type declares.
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
