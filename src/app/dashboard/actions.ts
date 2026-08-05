@@ -2,7 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
-import { linkSchema } from "@/lib/validation";
+import {
+  linkSchema,
+  normalizeSocialUrl,
+  socialLinkSchema,
+} from "@/lib/validation";
 import { nullIfBlank } from "@/lib/forms";
 import { revalidateProfilePages } from "@/lib/revalidate";
 import { normalizeUrlInput } from "@/lib/url-normalize";
@@ -130,6 +134,73 @@ export async function reorderLinks(orderedIds: string[]): Promise<void> {
   await prisma.$transaction(
     orderedIds.map((id, index) =>
       prisma.link.update({ where: { id }, data: { order: index } }),
+    ),
+  );
+
+  revalidateProfile(profile.username);
+}
+
+/* ------------------------------------------------------------------ *
+ * Social icons
+ *
+ * These live alongside the link actions rather than with the profile
+ * settings, because the icon row is content on the public page and is
+ * edited from the same screen as the links themselves. They revalidate
+ * "/dashboard" for that reason — pointing them at "/dashboard/settings"
+ * would write to the database and leave the visible list stale.
+ * ------------------------------------------------------------------ */
+
+export async function addSocialLink(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { profile } = await requireProfile();
+
+  const rawPlatform = String(formData.get("platform") ?? "");
+  const parsed = socialLinkSchema.safeParse({
+    platform: rawPlatform,
+    url: normalizeSocialUrl(rawPlatform, String(formData.get("url") ?? "")),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid social link" };
+  }
+
+  const last = await prisma.socialLink.findFirst({
+    where: { profileId: profile.id },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+
+  await prisma.socialLink.create({
+    data: {
+      profileId: profile.id,
+      platform: parsed.data.platform,
+      url: parsed.data.url,
+      order: (last?.order ?? -1) + 1,
+    },
+  });
+
+  revalidateProfile(profile.username);
+  return { ok: true };
+}
+
+export async function deleteSocialLink(id: string): Promise<void> {
+  const { profile } = await requireProfile();
+  await prisma.socialLink.deleteMany({ where: { id, profileId: profile.id } });
+  revalidateProfile(profile.username);
+}
+
+export async function reorderSocialLinks(orderedIds: string[]): Promise<void> {
+  const { profile } = await requireProfile();
+
+  const owned = await prisma.socialLink.count({
+    where: { id: { in: orderedIds }, profileId: profile.id },
+  });
+  if (owned !== orderedIds.length) return;
+
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.socialLink.update({ where: { id }, data: { order: index } }),
     ),
   );
 

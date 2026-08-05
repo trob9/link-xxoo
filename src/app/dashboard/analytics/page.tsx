@@ -1,9 +1,15 @@
 import { requireProfile } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { linkVisibilityWhere } from "@/lib/links";
 import { Panel } from "@/components/ui/panel";
 
+// Server-local calendar day. The 14-day window below is built with
+// setHours(0,0,0,0) — also server-local — so the bucket keys and the window
+// have to agree; keying with toISOString() (UTC) put them a day apart on any
+// host that isn't on UTC.
 function dayKey(d: Date) {
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 export default async function AnalyticsPage() {
@@ -13,8 +19,8 @@ export default async function AnalyticsPage() {
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
   fourteenDaysAgo.setHours(0, 0, 0, 0);
 
-  // Independent queries (both only need profile.id) — run concurrently.
-  const [links, events] = await Promise.all([
+  // Independent queries (all only need profile.id) — run concurrently.
+  const [links, events, liveLinkCount] = await Promise.all([
     prisma.link.findMany({
       where: { profileId: profile.id },
       orderBy: { clickCount: "desc" },
@@ -26,6 +32,12 @@ export default async function AnalyticsPage() {
         createdAt: { gte: fourteenDaysAgo },
       },
       select: { createdAt: true },
+    }),
+    // "Live" has to mean what the public page means by it — enabled AND
+    // inside its schedule window — so it goes through the same predicate
+    // the profile page uses rather than counting every row.
+    prisma.link.count({
+      where: { profileId: profile.id, ...linkVisibilityWhere(new Date()) },
     }),
   ]);
 
@@ -54,12 +66,10 @@ export default async function AnalyticsPage() {
   const last14Total = days.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-10">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">
-            Analytics
-          </h1>
+          <h1 className="font-display text-3xl">Analytics</h1>
           <p className="mt-1 text-sm text-ink-muted">
             How your links are performing.
           </p>
@@ -95,13 +105,13 @@ export default async function AnalyticsPage() {
             Live links
           </p>
           <p className="mt-1 font-stat text-3xl font-bold text-ink">
-            {links.length}
+            {liveLinkCount}
           </p>
         </Panel>
       </div>
 
       <Panel className="p-6">
-        <h2 className="font-display text-xl font-semibold text-ink">
+        <h2 className="font-display text-xl">
           Clicks, last 14 days
         </h2>
         <div className="mt-6 flex h-40 items-end gap-2">
@@ -120,7 +130,7 @@ export default async function AnalyticsPage() {
                 />
               </div>
               <span className="font-stat text-[10px] text-ink-muted">
-                {d.count}
+                {d.label}
               </span>
             </div>
           ))}
@@ -128,7 +138,7 @@ export default async function AnalyticsPage() {
       </Panel>
 
       <Panel className="p-6">
-        <h2 className="font-display text-xl font-semibold text-ink">
+        <h2 className="font-display text-xl">
           Top links
         </h2>
         {links.length === 0 ? (

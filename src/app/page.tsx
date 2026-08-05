@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { discordSignIn } from "./login/actions";
 
 const features = [
@@ -57,9 +56,8 @@ export default async function Home() {
       </header>
 
       <section className="mx-auto grid w-full max-w-5xl flex-1 items-center gap-10 px-6 py-16 md:grid-cols-2">
-        <div className="animate-rise-in">
-          <Badge>Your one link</Badge>
-          <h1 className="mt-4 font-display text-5xl font-semibold leading-[1.05] text-ink sm:text-6xl">
+        <div>
+          <h1 className="font-display text-5xl font-semibold leading-[1.05] text-ink sm:text-6xl">
             Everything you make, behind one link.
           </h1>
           <p className="mt-5 max-w-md text-lg text-ink-muted">
@@ -103,19 +101,26 @@ export default async function Home() {
           <h2 className="font-display text-3xl font-semibold text-ink">
             What you get
           </h2>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {/*
+            A ruled list, not a grid of identical bordered cards. Same words,
+            but the reading order is unambiguous and it doesn't look like
+            every other landing page assembled out of the same component kit.
+          */}
+          <dl className="mt-10 grid gap-x-12 sm:grid-cols-2">
             {features.map((f) => (
               <div
                 key={f.title}
-                className="border-hard shadow-hard-sm bg-surface-raised p-5"
+                className="border-t-2 border-border-strong py-5"
               >
-                <h3 className="font-display text-lg font-semibold text-ink">
+                <dt className="font-display text-lg font-semibold text-ink">
                   {f.title}
-                </h3>
-                <p className="mt-2 text-sm text-ink-muted">{f.body}</p>
+                </dt>
+                <dd className="mt-1.5 max-w-sm text-sm text-ink-muted">
+                  {f.body}
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       </section>
 

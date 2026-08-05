@@ -15,6 +15,10 @@ import SensitiveGate from "./_components/SensitiveGate";
 import SaveContact from "./_components/SaveContact";
 import SocialIcons from "./_components/SocialIcons";
 
+// Past this many links the entrance delay stops growing — see the comment at
+// the render site below.
+const STAGGER_CAP = 9;
+
 // generateMetadata only needs scalar profile fields — deliberately lighter
 // than the display query below, which joins links/socialLinks.
 const getProfileMeta = cache((username: string) =>
@@ -26,6 +30,12 @@ const getProfileMeta = cache((username: string) =>
       seoTitle: true,
       seoDescription: true,
       avatarUrl: true,
+      // Needed by resolveAvatarSrc below so the unfurl picks up an uploaded
+      // picture, not just the Discord one.
+      id: true,
+      username: true,
+      avatarEnabled: true,
+      updatedAt: true,
     },
   }),
 );
@@ -51,6 +61,32 @@ type ProfileCSSVars = React.CSSProperties & {
   [key: `--pt-${string}`]: string;
 };
 
+// Which picture to show: a user upload wins over the Discord-provided one,
+// and "avatar disabled" beats both. The upload is a blob column, so its
+// presence is a COUNT rather than a fetch — the bytes only ever leave the
+// database through the /api/avatar route. The updatedAt stamp in the path is
+// the cache-buster.
+const resolveAvatarSrc = cache(
+  async (profile: {
+    id: string;
+    username: string;
+    avatarEnabled: boolean;
+    avatarUrl: string | null;
+    updatedAt: Date;
+  }): Promise<string | null> => {
+    if (!profile.avatarEnabled) return null;
+
+    const hasUpload =
+      (await prisma.profile.count({
+        where: { id: profile.id, avatarImage: { not: null } },
+      })) > 0;
+
+    return hasUpload
+      ? `/api/avatar/${profile.username}/${profile.updatedAt.getTime()}`
+      : profile.avatarUrl;
+  },
+);
+
 export async function generateMetadata({
   params,
 }: {
@@ -63,13 +99,27 @@ export async function generateMetadata({
   const title = profile.seoTitle || profile.displayName;
   const description = profile.seoDescription || profile.bio || undefined;
 
+  // A link-in-bio page mostly travels by being pasted into a chat, so the
+  // unfurl IS the first impression. This previously only ever offered the
+  // Discord avatar, which meant anyone who uploaded their own picture
+  // unfurled with no image at all.
+  const image = await resolveAvatarSrc(profile);
+
   return {
     title,
     description,
     openGraph: {
       title,
       description,
-      images: profile.avatarUrl ? [profile.avatarUrl] : undefined,
+      type: "profile",
+      url: `/${username}`,
+      images: image ? [image] : undefined,
+    },
+    twitter: {
+      card: image ? "summary" : "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
     },
   };
 }
@@ -83,18 +133,7 @@ export default async function ProfilePage({
   const profile = await getProfileForDisplay(username);
   if (!profile) notFound();
 
-  // COUNT, not a fetch — the actual bytes are only ever loaded by the
-  // /api/avatar route handler that serves them.
-  const hasCustomAvatar = profile.avatarEnabled
-    ? (await prisma.profile.count({
-        where: { id: profile.id, avatarImage: { not: null } },
-      })) > 0
-    : false;
-  const avatarSrc = !profile.avatarEnabled
-    ? null
-    : hasCustomAvatar
-      ? `/api/avatar/${profile.username}/${profile.updatedAt.getTime()}`
-      : profile.avatarUrl;
+  const avatarSrc = await resolveAvatarSrc(profile);
   const avatarRadius = AVATAR_SHAPE_RADIUS[profile.avatarShape as AvatarShape];
 
   const theme = resolveThemeConfig(
@@ -119,7 +158,7 @@ export default async function ProfilePage({
   };
 
   const body = (
-    <div className="animate-rise-in mt-8 flex flex-col items-stretch gap-3">
+    <div className="mt-8 flex flex-col items-stretch gap-3">
       {profile.bio && (
         <p
           className="mb-2 text-center"
@@ -129,7 +168,13 @@ export default async function ProfilePage({
         </p>
       )}
 
-      {profile.links.map((link) => (
+      {/*
+        Links cascade in one after another rather than the whole block
+        fading up at once. The delay is capped at STAGGER_CAP steps so a
+        profile with thirty links doesn't leave the last one hanging for a
+        second and a half.
+      */}
+      {profile.links.map((link, index) => (
         <LinkButton
           key={link.id}
           id={link.id}
@@ -138,6 +183,7 @@ export default async function ProfilePage({
           icon={link.icon}
           featured={link.featured}
           buttonStyle={theme.buttonStyle}
+          index={Math.min(index, STAGGER_CAP)}
         />
       ))}
 
@@ -155,7 +201,12 @@ export default async function ProfilePage({
   );
 
   return (
-    <div className="min-h-screen" style={containerStyle}>
+    <div
+      data-profile
+      data-pattern={theme.backgroundPattern}
+      className="min-h-screen"
+      style={containerStyle}
+    >
       <div className="mx-auto w-full max-w-[560px] px-5 py-14">
         <header className="animate-rise-in flex flex-col items-center gap-4 text-center">
           {profile.avatarEnabled &&

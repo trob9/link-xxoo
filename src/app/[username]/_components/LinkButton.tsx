@@ -12,6 +12,7 @@ type Props = {
   icon: string | null;
   featured: boolean;
   buttonStyle: ButtonStyle;
+  index: number;
 };
 
 export default function LinkButton({
@@ -21,18 +22,17 @@ export default function LinkButton({
   icon,
   featured,
   buttonStyle,
+  index,
 }: Props) {
   const [pressed, setPressed] = useState(false);
 
   function fireBeacon() {
     const endpoint = `/api/links/${id}/click`;
-    try {
-      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-        navigator.sendBeacon(endpoint);
-        return;
-      }
-    } catch {
-      // fall through to fetch
+    // Feature check for browsers old enough to lack sendBeacon; `navigator`
+    // itself is always there, since this only runs from a pointer event.
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(endpoint);
+      return;
     }
     fetch(endpoint, { method: "POST", keepalive: true }).catch(() => {});
   }
@@ -59,10 +59,27 @@ export default function LinkButton({
     ink: "var(--pt-ink)",
   });
 
-  // The press-down interaction only applies to the "raised" style's shadow.
-  if (buttonStyle === "raised" && pressed) {
+  /*
+    Featured links earn emphasis through physical presence rather than a
+    bigger font or a louder colour: a heavier border and a deeper offset
+    shadow read as "sitting further off the page". Every button stays the
+    same height, so the vertical rhythm survives, and it reads across all
+    three button styles — including "flat", which has no border of its own
+    to thicken.
+  */
+  if (featured) {
+    variant.border = "3px solid var(--pt-ink)";
+    if (buttonStyle !== "outline") {
+      variant.boxShadow = "6px 6px 0 0 var(--pt-ink)";
+    }
+  }
+
+  // Press-down collapses whatever shadow the button has.
+  const hasShadow = buttonStyle === "raised" || (featured && buttonStyle !== "outline");
+  const pressDistance = featured ? 6 : 4;
+  if (hasShadow && pressed) {
     variant.boxShadow = "none";
-    variant.transform = "translate(4px, 4px)";
+    variant.transform = `translate(${pressDistance}px, ${pressDistance}px)`;
   }
 
   return (
@@ -71,11 +88,12 @@ export default function LinkButton({
       target="_blank"
       rel="noopener noreferrer"
       onClick={fireBeacon}
-      onPointerDown={() => buttonStyle === "raised" && setPressed(true)}
+      onPointerDown={() => hasShadow && setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       onPointerCancel={() => setPressed(false)}
-      style={{ ...base, ...variant }}
+      className="animate-rise-in-stagger"
+      style={{ ...base, ...variant, "--i": index } as CSSProperties}
     >
       {icon ? (
         <span aria-hidden className="mr-2">
@@ -83,29 +101,6 @@ export default function LinkButton({
         </span>
       ) : null}
       <span>{title}</span>
-      {featured && (
-        <span
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: -8,
-            right: -8,
-            width: 22,
-            height: 22,
-            borderRadius: 9999,
-            background: "var(--pt-accent)",
-            color: "var(--pt-accent-ink)",
-            border: "2px solid var(--pt-ink)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 11,
-            lineHeight: 1,
-          }}
-        >
-          ★
-        </span>
-      )}
     </a>
   );
 }

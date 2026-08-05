@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import {
   avatarDisplaySchema,
-  normalizeSocialUrl,
   profileSettingsSchema,
-  socialLinkSchema,
 } from "@/lib/validation";
 import { nullIfBlank } from "@/lib/forms";
 import { revalidateProfilePages } from "@/lib/revalidate";
@@ -52,48 +50,6 @@ export async function updateProfileSettings(
 
   revalidateSettings(profile.username);
   return { ok: true };
-}
-
-export async function addSocialLink(
-  _prev: SettingsState,
-  formData: FormData,
-): Promise<SettingsState> {
-  const { profile } = await requireProfile();
-
-  const rawPlatform = String(formData.get("platform") ?? "");
-  const parsed = socialLinkSchema.safeParse({
-    platform: rawPlatform,
-    url: normalizeSocialUrl(rawPlatform, String(formData.get("url") ?? "")),
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid social link" };
-  }
-
-  const last = await prisma.socialLink.findFirst({
-    where: { profileId: profile.id },
-    orderBy: { order: "desc" },
-    select: { order: true },
-  });
-
-  await prisma.socialLink.create({
-    data: {
-      profileId: profile.id,
-      platform: parsed.data.platform,
-      url: parsed.data.url,
-      order: (last?.order ?? -1) + 1,
-    },
-  });
-
-  revalidateSettings(profile.username);
-  return { ok: true };
-}
-
-export async function deleteSocialLink(id: string): Promise<void> {
-  const { profile } = await requireProfile();
-  await prisma.socialLink.deleteMany({
-    where: { id, profileId: profile.id },
-  });
-  revalidateSettings(profile.username);
 }
 
 // One combined action: shape + visibility always save, and if a new file

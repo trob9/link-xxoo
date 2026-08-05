@@ -1,5 +1,9 @@
 import { requireProfile } from "@/lib/session";
-import type { ButtonStyle, ThemeConfig } from "@/lib/themes";
+import type {
+  BackgroundPattern,
+  ButtonStyle,
+  ThemeConfig,
+} from "@/lib/themes";
 import { ThemeEditor } from "../_components/ThemeEditor";
 
 function parseOverrides(raw: string | null): Partial<ThemeConfig> {
@@ -21,8 +25,8 @@ export default async function ThemePage() {
       <header>
         <h1 className="font-display text-3xl">Theme</h1>
         <p className="text-sm text-ink-muted">
-          Pick a preset, then optionally override the accent colour and button
-          style. This styles your public page only.
+          Pick a preset, then optionally override the accent colour, button
+          style, and background. This styles your public page only.
         </p>
       </header>
 
@@ -30,6 +34,9 @@ export default async function ThemePage() {
         currentPreset={profile.themePreset}
         accentOverride={overrides.accent ?? null}
         buttonStyleOverride={(overrides.buttonStyle as ButtonStyle) ?? null}
+        backgroundPatternOverride={
+          (overrides.backgroundPattern as BackgroundPattern) ?? null
+        }
       />
     </div>
   );

@@ -1,0 +1,9 @@
+# Public profile pages are the point of this site, so they stay crawlable.
+# Everything behind auth (or that only makes sense to a signed-in owner) does not.
+
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /login
+Disallow: /api/

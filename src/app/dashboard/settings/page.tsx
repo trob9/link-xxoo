@@ -4,10 +4,6 @@ import { Panel } from "@/components/ui/panel";
 import { SettingsForm } from "../_components/SettingsForm";
 import { AvatarUploader } from "../_components/AvatarUploader";
 import type { AvatarShape } from "@/lib/avatar-shape";
-import {
-  SocialLinksManager,
-  type DashboardSocial,
-} from "../_components/SocialLinksManager";
 
 export default async function SettingsPage() {
   const { profile } = await requireProfile();
@@ -23,39 +19,28 @@ export default async function SettingsPage() {
     ? `/api/avatar/${profile.username}/${profile.updatedAt.getTime()}`
     : profile.avatarUrl;
 
-  const socialLinks = await prisma.socialLink.findMany({
-    where: { profileId: profile.id },
-    orderBy: { order: "asc" },
-  });
-
-  const socials: DashboardSocial[] = socialLinks.map((s) => ({
-    id: s.id,
-    platform: s.platform,
-    url: s.url,
-  }));
-
   return (
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="font-display text-3xl">Settings</h1>
         <p className="text-sm text-ink-muted">
-          Profile details, SEO, and the social icons on your page.
+          Who you are, how you&rsquo;re found, and who gets to see your page.
         </p>
       </header>
 
+      {/*
+        Grouped by the question each block answers rather than by which
+        database column it writes. Social icons used to live down here as a
+        third panel — they're content that shows on the public page, so they
+        moved next to the links.
+      */}
       <Panel className="flex flex-col gap-4">
-        <h2 className="font-display text-xl">Profile</h2>
-        <SettingsForm
-          displayName={profile.displayName}
-          bio={profile.bio}
-          seoTitle={profile.seoTitle}
-          seoDescription={profile.seoDescription}
-          sensitiveContent={profile.sensitiveContent}
-        />
-      </Panel>
-
-      <Panel className="flex flex-col gap-4">
-        <h2 className="font-display text-xl">Profile picture</h2>
+        <div>
+          <h2 className="font-display text-xl">Profile picture</h2>
+          <p className="text-sm text-ink-muted">
+            Shown at the top of your public page.
+          </p>
+        </div>
         <AvatarUploader
           displayName={profile.displayName}
           currentSrc={avatarSrc}
@@ -66,8 +51,13 @@ export default async function SettingsPage() {
       </Panel>
 
       <Panel className="flex flex-col gap-4">
-        <h2 className="font-display text-xl">Social links</h2>
-        <SocialLinksManager socials={socials} />
+        <SettingsForm
+          displayName={profile.displayName}
+          bio={profile.bio}
+          seoTitle={profile.seoTitle}
+          seoDescription={profile.seoDescription}
+          sensitiveContent={profile.sensitiveContent}
+        />
       </Panel>
     </div>
   );

@@ -4,9 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { revalidateProfilePages } from "@/lib/revalidate";
 import {
+  BACKGROUND_PATTERNS,
   BUTTON_STYLES,
   getThemePreset,
   THEME_PRESETS,
+  type BackgroundPattern,
   type ButtonStyle,
   type ThemeConfig,
 } from "@/lib/themes";
@@ -44,6 +46,14 @@ export async function updateTheme(
     buttonStyle !== presetConfig.buttonStyle
   ) {
     overrides.buttonStyle = buttonStyle as ButtonStyle;
+  }
+
+  const pattern = String(formData.get("backgroundPattern") ?? "");
+  if (
+    BACKGROUND_PATTERNS.includes(pattern as BackgroundPattern) &&
+    pattern !== presetConfig.backgroundPattern
+  ) {
+    overrides.backgroundPattern = pattern as BackgroundPattern;
   }
 
   const themeConfig =

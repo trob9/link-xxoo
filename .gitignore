@@ -63,3 +63,6 @@ skills-lock.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Refine-pass notes — local working memory, not part of the product
+.refine/

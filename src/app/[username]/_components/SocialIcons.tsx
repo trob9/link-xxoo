@@ -94,7 +94,9 @@ export default function SocialIcons({ socials }: { socials: Social[] }) {
               justifyContent: "center",
               width: 42,
               height: 42,
-              borderRadius: 9999,
+              // Square-ish, not a circle — the design system's rule is no
+              // rounded-full pills, and this matches the link buttons' radius.
+              borderRadius: 10,
               background: "var(--pt-surface)",
               color: "var(--pt-ink)",
               border: "2px solid var(--pt-ink)",

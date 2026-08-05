@@ -19,7 +19,11 @@ const mono = Space_Mono({
   weight: ["400", "700"],
 });
 
+// Profile pages hand Next relative image paths for their unfurl cards, and
+// Open Graph requires absolute URLs — metadataBase is what turns one into the
+// other. AUTH_URL is already the canonical public origin in production.
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
   title: "link.xxoo.ooo",
   description: "One link. Everything you make.",
 };

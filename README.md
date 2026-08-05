@@ -16,7 +16,10 @@ blue/purple-gradient "AI-built" look.
 - vCard "save contact" button on public profiles
 - Per-profile SEO title/description
 - Sensitive-content interstitial gate
-- Social icon row (Instagram, X, TikTok, YouTube, Twitch, GitHub, LinkedIn, website, email)
+- Uploadable profile picture (server-side WebP conversion, circle/rounded/square, show-hide toggle)
+- Social icon row, drag-orderable (Instagram, X, TikTok, YouTube, Twitch, GitHub, LinkedIn, Facebook, website, email)
+- Per-profile background texture (plain / dots / grid), drawn in CSS with no image assets
+- Live theme preview in the editor, staggered link entrance, and `prefers-reduced-motion` support
 
 ## Local development
 
@@ -58,12 +61,27 @@ npm run test:e2e  # playwright — builds, starts, and drives the real app
 
 ## Deploying (mini-PC / any Docker host)
 
-This repo ships a production `Dockerfile` + `docker-compose.yml`, but **has
-not been deployed** — deploys for this project happen from the host that
-actually serves public traffic, not from a laptop.
+This runs in production at https://link.xxoo.ooo, behind a reverse proxy on a
+shared Docker network. The production container is **not** started from the
+`docker-compose.yml` in this repo — that file publishes `3000:3000` on the
+host and declares no external network, which is the right shape for a
+standalone host but not for a proxied one. In production the container joins
+the proxy's network instead and publishes no ports at all:
 
 ```bash
 cp .env.production.example .env.production   # fill in AUTH_SECRET / Discord creds
+docker build -t link-xxoo:latest .
+docker run -d --name link-xxoo --network <proxy-network> \
+  -v link-xxoo-data:/app/data --env-file .env.production \
+  --cap-drop ALL --cap-add CHOWN --cap-add SETUID --cap-add SETGID --cap-add SETPCAP \
+  --security-opt no-new-privileges --restart unless-stopped \
+  link-xxoo:latest
+```
+
+For a standalone host with nothing else in front of it, the bundled compose
+file is still the quickest path:
+
+```bash
 docker compose up -d --build
 ```
 

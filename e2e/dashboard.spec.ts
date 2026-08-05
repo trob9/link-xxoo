@@ -19,7 +19,7 @@ test.describe("authenticated dashboard", () => {
 
     await page.getByRole("button", { name: /add link/i }).click();
     await page.getByLabel("Title").fill("Playwright link");
-    await page.getByLabel("URL").fill("https://example.com/playwright");
+    await page.getByLabel("URL", { exact: true }).fill("https://example.com/playwright");
     await page.getByRole("button", { name: /save link/i }).click();
 
     await expect(page.getByText("Playwright link")).toBeVisible();
@@ -31,7 +31,7 @@ test.describe("authenticated dashboard", () => {
     await page.goto("/dashboard");
     await page.getByRole("button", { name: /add link/i }).click();
     await page.getByLabel("Title").fill("Public visible link");
-    await page.getByLabel("URL").fill("https://example.com/public");
+    await page.getByLabel("URL", { exact: true }).fill("https://example.com/public");
     await page.getByRole("button", { name: /save link/i }).click();
     await expect(page.getByText("Public visible link")).toBeVisible();
 
@@ -46,7 +46,7 @@ test.describe("authenticated dashboard", () => {
     await page.getByRole("button", { name: /add link/i }).click();
     await page.getByLabel("Title").fill("Icon link");
 
-    const urlInput = page.getByLabel("URL");
+    const urlInput = page.getByLabel("URL", { exact: true });
     await urlInput.fill("example.com/icon-test");
 
     // Open the emoji picker and choose one — proves the picker itself
@@ -78,12 +78,31 @@ test.describe("authenticated dashboard", () => {
     ).toBeVisible();
   });
 
+  test("saving a preset carries its background pattern to the public page", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/theme");
+
+    // Ink's default pattern is "grid" — picking the preset and saving should
+    // put that on the public page without touching the pattern control.
+    await page.getByRole("button", { name: /Ink/ }).click();
+    await page.getByRole("button", { name: /save theme/i }).click();
+    await expect(page.getByText("Saved")).toBeVisible();
+
+    await page.goto("/e2e-tester");
+    await expect(page.locator("[data-profile]")).toHaveAttribute(
+      "data-pattern",
+      "grid",
+    );
+  });
+
   test("URL placeholder updates per platform, and a mismatch is rejected only on submit", async ({
     page,
   }) => {
-    await page.goto("/dashboard/settings");
+    // Social icons live on the links page now, not under settings.
+    await page.goto("/dashboard");
 
-    const urlInput = page.getByLabel("URL");
+    const urlInput = page.getByLabel("Profile URL");
     await page.getByLabel("Platform").selectOption("instagram");
     await expect(urlInput).toHaveAttribute("placeholder", "instagram.com/you");
     // No persistent hint text before any submission is attempted.
@@ -96,21 +115,23 @@ test.describe("authenticated dashboard", () => {
     // mismatch message should only appear now, as a submit error.
     await page.getByLabel("Platform").selectOption("facebook");
     await urlInput.fill("instagram.com/testuser");
-    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
     await expect(
       page.getByText(/must be a link to facebook\.com/i),
     ).toBeVisible();
-    await expect(page.getByText("No social links yet.")).toBeVisible();
+    await expect(
+      page.getByText("No social icons yet.", { exact: false }),
+    ).toBeVisible();
   });
 
   test("accepts a matching social URL and normalizes it to https", async ({
     page,
   }) => {
-    await page.goto("/dashboard/settings");
+    await page.goto("/dashboard");
 
     await page.getByLabel("Platform").selectOption("instagram");
-    await page.getByLabel("URL").fill("instagram.com/testuser");
-    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByLabel("Profile URL").fill("instagram.com/testuser");
+    await page.getByRole("button", { name: "Add", exact: true }).click();
     await expect(
       page.getByText("https://instagram.com/testuser"),
     ).toBeVisible();
@@ -119,7 +140,9 @@ test.describe("authenticated dashboard", () => {
   test("settings page saves profile changes", async ({ page }) => {
     await page.goto("/dashboard/settings");
     await page.getByLabel("Display name").fill("E2E Tester Updated");
-    await page.getByRole("button", { name: /save/i }).first().click();
+    // Named exactly rather than by position — the settings page has two forms
+    // (picture, then details) and their order is a layout decision.
+    await page.getByRole("button", { name: "Save settings" }).click();
     await expect(page.getByLabel("Display name")).toHaveValue(
       "E2E Tester Updated",
     );

@@ -39,36 +39,6 @@
   }
 }
 
-:root[data-theme="light"] {
-  --surface-sunk: #efe6d4;
-  --surface: #fffdf8;
-  --surface-raised: #ffffff;
-  --ink: #211d1a;
-  --ink-muted: #6b6259;
-  --border-strong: #211d1a;
-  --action-primary: #ff5c39;
-  --action-primary-ink: #1c1108;
-  --accent-secondary: #9fd12b;
-  --accent-secondary-ink: #16210a;
-  --danger: #d6323e;
-  --danger-ink: #fff7f2;
-}
-
-:root[data-theme="dark"] {
-  --surface-sunk: #16130f;
-  --surface: #211c16;
-  --surface-raised: #2a241c;
-  --ink: #f5efe4;
-  --ink-muted: #a79c8d;
-  --border-strong: #f5efe4;
-  --action-primary: #ff7a53;
-  --action-primary-ink: #1c1108;
-  --accent-secondary: #c6ff4d;
-  --accent-secondary-ink: #16210a;
-  --danger: #ff6b6b;
-  --danger-ink: #2a0a0a;
-}
-
 @theme inline {
   --color-surface-sunk: var(--surface-sunk);
   --color-surface: var(--surface);
@@ -143,4 +113,80 @@ h3,
 
 .animate-rise-in {
   animation: rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/*
+  Staggered reveal. Each item sets --i inline (0, 1, 2, ...) and waits that
+  many steps before its own rise-in runs, so a profile's links cascade in
+  rather than appearing as one block. Capped via the caller — past ~10 items
+  the last one would otherwise wait long enough to feel broken.
+*/
+.animate-rise-in-stagger {
+  animation: rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/*
+  Focus rings. The public page is themed by the profile owner, so its ring
+  has to come from that theme's accent — a UA default ring is close to
+  invisible on the dark presets (Ink, Neon Grid).
+*/
+:focus-visible {
+  outline: 3px solid var(--action-primary);
+  outline-offset: 3px;
+}
+
+[data-profile] :focus-visible {
+  outline: 3px solid var(--pt-accent);
+  outline-offset: 3px;
+}
+
+/*
+  Optional background texture for a public profile. Flat, printed-looking
+  patterns only — same reasoning as the hard shadows: no blur, no gradients
+  that read as a glow. The tint is derived from the theme's own ink so it
+  works on both the light and dark presets without a second token.
+*/
+[data-pattern="dots"] {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--pt-ink) 14%, transparent) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 18px 18px;
+}
+
+[data-pattern="grid"] {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--pt-ink) 10%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--pt-ink) 10%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 26px 26px;
+}
+
+/*
+  WCAG 2.1 SC 2.3.3. Motion here is decorative without exception, so when a
+  visitor asks for less of it there is nothing to preserve — collapse it all
+  rather than trying to keep a "tasteful" subset.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .press-hard:active {
+    transform: none;
+  }
 }

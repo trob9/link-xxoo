@@ -1,6 +1,18 @@
 export const BUTTON_STYLES = ["raised", "flat", "outline"] as const;
 export type ButtonStyle = (typeof BUTTON_STYLES)[number];
 
+// Background texture for the public page. Rendered entirely in CSS from the
+// theme's own ink colour (see [data-pattern] in globals.css) — no image
+// assets, so it costs nothing to serve and works on every preset.
+export const BACKGROUND_PATTERNS = ["none", "dots", "grid"] as const;
+export type BackgroundPattern = (typeof BACKGROUND_PATTERNS)[number];
+
+export const BACKGROUND_PATTERN_LABELS: Record<BackgroundPattern, string> = {
+  none: "Plain",
+  dots: "Dots",
+  grid: "Grid",
+};
+
 export type ThemeConfig = {
   background: string;
   surface: string;
@@ -9,6 +21,7 @@ export type ThemeConfig = {
   accent: string;
   accentInk: string;
   buttonStyle: ButtonStyle;
+  backgroundPattern: BackgroundPattern;
   displayFont: "fraunces" | "space-grotesk" | "space-mono";
 };
 
@@ -35,6 +48,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#ff5c39",
       accentInk: "#1c1108",
       buttonStyle: "raised",
+      backgroundPattern: "none",
       displayFont: "fraunces",
     },
   },
@@ -50,6 +64,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#c6ff4d",
       accentInk: "#16210a",
       buttonStyle: "raised",
+      backgroundPattern: "grid",
       displayFont: "space-grotesk",
     },
   },
@@ -65,6 +80,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#ff3d7f",
       accentInk: "#fff7fa",
       buttonStyle: "flat",
+      backgroundPattern: "dots",
       displayFont: "fraunces",
     },
   },
@@ -80,6 +96,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#0e0d0b",
       accentInk: "#f6f1e4",
       buttonStyle: "outline",
+      backgroundPattern: "none",
       displayFont: "space-mono",
     },
   },
@@ -95,6 +112,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#4dd6ff",
       accentInk: "#03131a",
       buttonStyle: "raised",
+      backgroundPattern: "grid",
       displayFont: "space-grotesk",
     },
   },
@@ -110,6 +128,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#ff9f1c",
       accentInk: "#2a1d05",
       buttonStyle: "flat",
+      backgroundPattern: "dots",
       displayFont: "fraunces",
     },
   },
