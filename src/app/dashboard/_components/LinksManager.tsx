@@ -206,11 +206,12 @@ function SortableLinkRow({ link }: { link: DashboardLink }) {
           }}
         />
 
-        <div className="flex shrink-0 gap-[5px]">
+        <div className="flex shrink-0 items-center">
           <Button
             variant={featured ? "primary" : "ghost"}
             size="sm"
             aria-label="Toggle featured"
+            className="mr-[5px]"
             onClick={() => {
               const next = !featured;
               setFeatured(next);
@@ -226,7 +227,7 @@ function SortableLinkRow({ link }: { link: DashboardLink }) {
           >
             Edit
           </Button>
-          <form action={deleteLink.bind(null, link.id)}>
+          <form action={deleteLink.bind(null, link.id)} className="ml-[15px]">
             <Button type="submit" variant="danger" size="sm">
               Delete
             </Button>

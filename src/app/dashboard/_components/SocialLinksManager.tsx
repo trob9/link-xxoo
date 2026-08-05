@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import type { FocusEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { fieldClasses, Input, Label } from "@/components/ui/input";
-import { PLATFORM_HOSTS, SOCIAL_PLATFORMS, normalizeSocialUrl } from "@/lib/validation";
+import { SOCIAL_PLATFORMS, normalizeSocialUrl } from "@/lib/validation";
 import {
   addSocialLink,
   deleteSocialLink,
@@ -18,6 +18,19 @@ export type DashboardSocial = {
 };
 
 const initialState: SettingsState = {};
+
+const URL_PLACEHOLDERS: Record<(typeof SOCIAL_PLATFORMS)[number], string> = {
+  instagram: "instagram.com/you",
+  x: "x.com/you",
+  tiktok: "tiktok.com/@you",
+  youtube: "youtube.com/@you",
+  twitch: "twitch.tv/you",
+  github: "github.com/you",
+  linkedin: "linkedin.com/in/you",
+  facebook: "facebook.com/you",
+  website: "yoursite.com",
+  email: "you@example.com",
+};
 
 export function SocialLinksManager({ socials }: { socials: DashboardSocial[] }) {
   const [state, formAction, pending] = useActionState(
@@ -37,14 +50,6 @@ export function SocialLinksManager({ socials }: { socials: DashboardSocial[] }) 
     const next = normalizeSocialUrl(platform, e.target.value);
     if (next !== e.target.value) e.target.value = next;
   }
-
-  const allowedHosts = PLATFORM_HOSTS[platform];
-  const hint =
-    platform === "email"
-      ? "Your email address."
-      : allowedHosts
-        ? `Must be a link to ${allowedHosts[0]}.`
-        : "Any http(s) link.";
 
   return (
     <div className="flex flex-col gap-4">
@@ -105,10 +110,9 @@ export function SocialLinksManager({ socials }: { socials: DashboardSocial[] }) 
             name="url"
             type="text"
             required
-            placeholder={platform === "email" ? "you@example.com" : "instagram.com/you"}
+            placeholder={URL_PLACEHOLDERS[platform]}
             onBlur={onUrlBlur}
           />
-          <p className="mt-1 text-xs text-ink-muted">{hint}</p>
         </div>
         <Button type="submit" variant="secondary" disabled={pending}>
           {pending ? "Adding…" : "Add"}

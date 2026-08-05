@@ -81,9 +81,7 @@ export const linkSchema = z.object({
 // site — not just "any http(s) URL" like the generic "website" option.
 // Hostnames are matched exactly (case-insensitive) against the URL's own
 // hostname, which the WHATWG URL parser already lowercases.
-// Exported so the dashboard UI can show "must be an instagram.com link"
-// style hints without duplicating the domain list.
-export const PLATFORM_HOSTS: Partial<Record<SocialPlatform, string[]>> = {
+const PLATFORM_HOSTS: Partial<Record<SocialPlatform, string[]>> = {
   instagram: ["instagram.com", "www.instagram.com"],
   x: ["x.com", "www.x.com", "twitter.com", "www.twitter.com"],
   tiktok: ["tiktok.com", "www.tiktok.com"],

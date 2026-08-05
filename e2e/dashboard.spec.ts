@@ -78,19 +78,24 @@ test.describe("authenticated dashboard", () => {
     ).toBeVisible();
   });
 
-  test("shows a per-platform domain hint and rejects a mismatched URL", async ({
+  test("URL placeholder updates per platform, and a mismatch is rejected only on submit", async ({
     page,
   }) => {
     await page.goto("/dashboard/settings");
 
+    const urlInput = page.getByLabel("URL");
     await page.getByLabel("Platform").selectOption("instagram");
-    await expect(
-      page.getByText("Must be a link to instagram.com."),
-    ).toBeVisible();
+    await expect(urlInput).toHaveAttribute("placeholder", "instagram.com/you");
+    // No persistent hint text before any submission is attempted.
+    await expect(page.getByText(/must be a link to/i)).toHaveCount(0);
 
-    // Wrong platform for this URL — should be rejected, not added.
+    await page.getByLabel("Platform").selectOption("youtube");
+    await expect(urlInput).toHaveAttribute("placeholder", "youtube.com/@you");
+
+    // Wrong platform for this URL — should be rejected, not added, and the
+    // mismatch message should only appear now, as a submit error.
     await page.getByLabel("Platform").selectOption("facebook");
-    await page.getByLabel("URL").fill("instagram.com/testuser");
+    await urlInput.fill("instagram.com/testuser");
     await page.getByRole("button", { name: "Add" }).click();
     await expect(
       page.getByText(/must be a link to facebook\.com/i),
