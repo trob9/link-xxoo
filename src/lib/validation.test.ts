@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  avatarDisplaySchema,
   linkSchema,
   normalizeSocialUrl,
   profileSettingsSchema,
@@ -223,6 +224,26 @@ describe("profileSettingsSchema", () => {
       profileSettingsSchema.parse({
         displayName: "Tom",
         bio: "a".repeat(281),
+      }),
+    ).toThrow();
+  });
+});
+
+describe("avatarDisplaySchema", () => {
+  it("accepts a valid shape and enabled flag", () => {
+    const result = avatarDisplaySchema.parse({
+      avatarShape: "rounded",
+      avatarEnabled: true,
+    });
+    expect(result.avatarShape).toBe("rounded");
+    expect(result.avatarEnabled).toBe(true);
+  });
+
+  it("rejects an unknown shape", () => {
+    expect(() =>
+      avatarDisplaySchema.parse({
+        avatarShape: "hexagon",
+        avatarEnabled: true,
       }),
     ).toThrow();
   });

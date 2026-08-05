@@ -1,0 +1,49 @@
+import { describe, expect, it } from "vitest";
+import sharp from "sharp";
+import { AVATAR_SIZE, processAvatarImage } from "@/lib/avatar";
+
+async function makeTestImage(width: number, height: number): Promise<Buffer> {
+  return sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 255, g: 90, b: 50 },
+    },
+  })
+    .png()
+    .toBuffer();
+}
+
+describe("processAvatarImage", () => {
+  it("converts a non-square PNG into a square WebP", async () => {
+    const input = await makeTestImage(800, 400);
+    const output = await processAvatarImage(input);
+
+    const meta = await sharp(output).metadata();
+    expect(meta.format).toBe("webp");
+    expect(meta.width).toBe(AVATAR_SIZE);
+    expect(meta.height).toBe(AVATAR_SIZE);
+  });
+
+  it("upscales a small image to the standard avatar size", async () => {
+    const input = await makeTestImage(64, 64);
+    const output = await processAvatarImage(input);
+
+    const meta = await sharp(output).metadata();
+    expect(meta.width).toBe(AVATAR_SIZE);
+    expect(meta.height).toBe(AVATAR_SIZE);
+  });
+
+  it("produces a meaningfully smaller file than an uncompressed equivalent", async () => {
+    const input = await makeTestImage(AVATAR_SIZE, AVATAR_SIZE);
+    const output = await processAvatarImage(input);
+    expect(output.byteLength).toBeLessThan(input.byteLength);
+  });
+
+  it("rejects input that isn't a real image", async () => {
+    await expect(
+      processAvatarImage(Buffer.from("not an image")),
+    ).rejects.toThrow();
+  });
+});

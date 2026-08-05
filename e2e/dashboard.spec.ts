@@ -124,4 +124,53 @@ test.describe("authenticated dashboard", () => {
       "E2E Tester Updated",
     );
   });
+
+  test("uploads a custom avatar, sets a shape, and it renders on the public page", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/settings");
+
+    await page.setInputFiles(
+      'input[type="file"][name="avatar"]',
+      "e2e/fixtures/test-avatar.png",
+    );
+    await expect(page.getByText("New photo selected")).toBeVisible();
+
+    await page.getByRole("button", { name: "Square" }).click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+
+    await expect(page.getByText("Saved")).toBeVisible();
+    // The transient preview clears once the real upload is reflected.
+    await expect(page.getByText("New photo selected")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Remove photo" }),
+    ).toBeVisible();
+
+    // The image was genuinely processed and is served as WebP. The version
+    // segment is opaque (cache-buster only), any value works for lookup.
+    const res = await page.request.get("/api/avatar/e2e-tester/1");
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toBe("image/webp");
+
+    await page.goto("/e2e-tester");
+    const avatarImg = page.locator("header img");
+    await expect(avatarImg).toBeVisible();
+    await expect(avatarImg).toHaveCSS("border-radius", "0px");
+  });
+
+  test("turning off the profile picture hides it from the public page", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/settings");
+
+    await page.getByRole("switch", { name: "Show profile picture" }).click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Saved")).toBeVisible();
+
+    await page.goto("/e2e-tester");
+    await expect(page.locator("header img")).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: "E2E Tester" }),
+    ).toBeVisible();
+  });
 });

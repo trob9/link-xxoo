@@ -16,14 +16,22 @@ async function main() {
     create: { discordId: TEST_USER.discordId },
   });
 
+  const resetAvatarFields = {
+    displayName: TEST_USER.displayName,
+    avatarUrl: null,
+    avatarImage: null,
+    avatarShape: "circle",
+    avatarEnabled: true,
+  };
+
   const profile = await prisma.profile.upsert({
     where: { userId: user.id },
-    update: {},
+    update: resetAvatarFields,
     create: {
       userId: user.id,
       username: TEST_USER.username,
-      displayName: TEST_USER.displayName,
       themePreset: "dawn",
+      ...resetAvatarFields,
     },
   });
 

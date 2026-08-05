@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { linkVisibilityWhere } from "@/lib/links";
+import { AVATAR_SHAPE_RADIUS, type AvatarShape } from "@/lib/avatar-shape";
 import {
   resolveThemeConfig,
   DISPLAY_FONT_STACK,
@@ -33,6 +34,9 @@ const getProfileForDisplay = cache(async (username: string) => {
   const now = new Date();
   return prisma.profile.findUnique({
     where: { username },
+    // avatarImage is a binary blob — fetched separately as a byte count
+    // check below, never loaded into this query.
+    omit: { avatarImage: true },
     include: {
       links: {
         where: linkVisibilityWhere(now),
@@ -78,6 +82,20 @@ export default async function ProfilePage({
   const { username } = await params;
   const profile = await getProfileForDisplay(username);
   if (!profile) notFound();
+
+  // COUNT, not a fetch — the actual bytes are only ever loaded by the
+  // /api/avatar route handler that serves them.
+  const hasCustomAvatar = profile.avatarEnabled
+    ? (await prisma.profile.count({
+        where: { id: profile.id, avatarImage: { not: null } },
+      })) > 0
+    : false;
+  const avatarSrc = !profile.avatarEnabled
+    ? null
+    : hasCustomAvatar
+      ? `/api/avatar/${profile.username}/${profile.updatedAt.getTime()}`
+      : profile.avatarUrl;
+  const avatarRadius = AVATAR_SHAPE_RADIUS[profile.avatarShape as AvatarShape];
 
   const theme = resolveThemeConfig(
     profile.themePreset,
@@ -140,32 +158,37 @@ export default async function ProfilePage({
     <div className="min-h-screen" style={containerStyle}>
       <div className="mx-auto w-full max-w-[560px] px-5 py-14">
         <header className="animate-rise-in flex flex-col items-center gap-4 text-center">
-          {profile.avatarUrl ? (
-            <Image
-              src={profile.avatarUrl}
-              alt={profile.displayName}
-              width={104}
-              height={104}
-              className="rounded-full object-cover"
-              style={{ border: "2px solid var(--pt-ink)" }}
-            />
-          ) : (
-            <div
-              aria-hidden
-              className="flex items-center justify-center rounded-full"
-              style={{
-                width: 104,
-                height: 104,
-                fontSize: 40,
-                fontWeight: 700,
-                background: "var(--pt-surface)",
-                color: "var(--pt-ink)",
-                border: "2px solid var(--pt-ink)",
-              }}
-            >
-              {profile.displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
+          {profile.avatarEnabled &&
+            (avatarSrc ? (
+              <Image
+                src={avatarSrc}
+                alt={profile.displayName}
+                width={104}
+                height={104}
+                className="object-cover"
+                style={{
+                  border: "2px solid var(--pt-ink)",
+                  borderRadius: avatarRadius,
+                }}
+              />
+            ) : (
+              <div
+                aria-hidden
+                className="flex items-center justify-center"
+                style={{
+                  width: 104,
+                  height: 104,
+                  fontSize: 40,
+                  fontWeight: 700,
+                  background: "var(--pt-surface)",
+                  color: "var(--pt-ink)",
+                  border: "2px solid var(--pt-ink)",
+                  borderRadius: avatarRadius,
+                }}
+              >
+                {profile.displayName.charAt(0).toUpperCase()}
+              </div>
+            ))}
 
           <h1 style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.1 }}>
             {profile.displayName}

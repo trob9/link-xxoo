@@ -30,7 +30,10 @@ model Profile {
 
   displayName      String
   bio              String?
-  avatarUrl        String?
+  avatarUrl        String? // Discord-provided avatar (fallback when no custom upload)
+  avatarImage      Bytes? // server-converted WebP bytes from a user upload
+  avatarShape      String  @default("circle") // "circle" | "rounded" | "square"
+  avatarEnabled    Boolean @default(true)
   seoTitle         String?
   seoDescription   String?
   sensitiveContent Boolean @default(false)

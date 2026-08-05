@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isSingleEmoji } from "@/lib/emoji";
 import { normalizeUrlInput } from "@/lib/url-normalize";
+import { AVATAR_SHAPES } from "@/lib/avatar-shape";
 
 export const RESERVED_USERNAMES = new Set([
   "admin",
@@ -153,4 +154,9 @@ export const profileSettingsSchema = z.object({
   seoTitle: z.string().trim().max(70).optional().nullable(),
   seoDescription: z.string().trim().max(160).optional().nullable(),
   sensitiveContent: z.boolean().optional(),
+});
+
+export const avatarDisplaySchema = z.object({
+  avatarShape: z.enum(AVATAR_SHAPES),
+  avatarEnabled: z.boolean(),
 });
