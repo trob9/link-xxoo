@@ -57,8 +57,7 @@ export function SettingsForm({
       <fieldset className="flex flex-col gap-4">
         <legend className="font-display text-xl">Discovery</legend>
         <p className="-mt-2 text-sm text-ink-muted">
-          What search engines and chat apps show when someone shares your page.
-          Leave blank to fall back to your name and bio.
+          Shown when your page is shared. Leave blank to use your name and bio.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">

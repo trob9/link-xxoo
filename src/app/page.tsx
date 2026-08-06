@@ -13,12 +13,12 @@ const features = [
     body: "Set a start and end time. A link goes live for the drop, then hides itself.",
   },
   {
-    title: "Click analytics",
-    body: "See which links get tapped and how traffic moves over the last two weeks.",
+    title: "Views and clicks",
+    body: "Visits, taps, and the click rate between them — two weeks at a glance.",
   },
   {
-    title: "Custom themes",
-    body: "Real presets and a config you control — not four shades of the same purple.",
+    title: "Themes you design",
+    body: "Every colour, font and button style. Save as many as you like, for free.",
   },
   {
     title: "One-tap Discord sign-in",

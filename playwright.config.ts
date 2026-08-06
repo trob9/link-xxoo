@@ -10,7 +10,12 @@ const BASE_URL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: "./e2e",
   globalSetup: "./e2e/global-setup.ts",
-  fullyParallel: true,
+  // One worker, not parallel: every spec shares a single sqlite file and a
+  // single seeded profile, and each test reseeds it in beforeEach. Run two
+  // spec files at once and one file's reseed lands in the middle of another
+  // file's test — which shows up as a test failing on data it never wrote.
+  fullyParallel: false,
+  workers: 1,
   retries: 0,
   reporter: "list",
   use: {

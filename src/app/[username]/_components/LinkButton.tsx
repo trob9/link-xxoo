@@ -25,6 +25,7 @@ export default function LinkButton({
   index,
 }: Props) {
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   function fireBeacon() {
     const endpoint = `/api/links/${id}/click`;
@@ -50,7 +51,12 @@ export default function LinkButton({
     textAlign: "center",
     textDecoration: "none",
     cursor: "pointer",
-    transition: "transform 60ms ease, box-shadow 60ms ease",
+    // Press is near-instant so the button feels physically connected to the
+    // finger; hover is slower so the lift reads as a movement rather than a
+    // jump. One duration for both would have to compromise on one of them.
+    transition: pressed
+      ? "transform 60ms ease, box-shadow 60ms ease"
+      : "transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 140ms cubic-bezier(0.16, 1, 0.3, 1)",
   };
 
   const variant: CSSProperties = buttonStyleVariant(buttonStyle, {
@@ -74,12 +80,28 @@ export default function LinkButton({
     }
   }
 
-  // Press-down collapses whatever shadow the button has.
   const hasShadow = buttonStyle === "raised" || (featured && buttonStyle !== "outline");
-  const pressDistance = featured ? 6 : 4;
-  if (hasShadow && pressed) {
-    variant.boxShadow = "none";
-    variant.transform = `translate(${pressDistance}px, ${pressDistance}px)`;
+  const shadowDistance = featured ? 6 : 4;
+
+  /*
+    Hover lifts the button towards the reader and grows its shadow by the same
+    amount it moved, so the offset stays put and only the gap opens up — the
+    thing reads as rising off the page rather than sliding across it. Press
+    then travels the whole way down and closes the shadow to nothing.
+
+    Styles that have no shadow to open (flat, outline) get the lift alone;
+    without it they'd be the only links on the page that don't react.
+  */
+  if (pressed) {
+    variant.transform = hasShadow
+      ? `translate(${shadowDistance}px, ${shadowDistance}px)`
+      : "scale(0.985)";
+    if (hasShadow) variant.boxShadow = "none";
+  } else if (hovered) {
+    variant.transform = "translate(-2px, -2px)";
+    if (hasShadow) {
+      variant.boxShadow = `${shadowDistance + 2}px ${shadowDistance + 2}px 0 0 var(--pt-ink)`;
+    }
   }
 
   return (
@@ -88,19 +110,25 @@ export default function LinkButton({
       target="_blank"
       rel="noopener noreferrer"
       onClick={fireBeacon}
-      onPointerDown={() => hasShadow && setPressed(true)}
+      onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => {
+        setPressed(false);
+        setHovered(false);
+      }}
       onPointerCancel={() => setPressed(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
       className="animate-rise-in-stagger"
       style={{ ...base, ...variant, "--i": index } as CSSProperties}
     >
       {icon ? (
-        <span aria-hidden className="mr-2">
+        <span aria-hidden className="mr-2 shrink-0">
           {icon}
         </span>
       ) : null}
-      <span>{title}</span>
+      <span className="min-w-0 truncate">{title}</span>
     </a>
   );
 }

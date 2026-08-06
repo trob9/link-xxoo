@@ -6,14 +6,15 @@ import { prisma } from "@/lib/prisma";
 import { linkVisibilityWhere } from "@/lib/links";
 import { AVATAR_SHAPE_RADIUS, type AvatarShape } from "@/lib/avatar-shape";
 import {
+  parseStoredThemeConfig,
   resolveThemeConfig,
   DISPLAY_FONT_STACK,
-  type ThemeConfig,
 } from "@/lib/themes";
 import LinkButton from "./_components/LinkButton";
 import SensitiveGate from "./_components/SensitiveGate";
 import SaveContact from "./_components/SaveContact";
 import SocialIcons from "./_components/SocialIcons";
+import ViewBeacon from "./_components/ViewBeacon";
 
 // Past this many links the entrance delay stops growing — see the comment at
 // the render site below.
@@ -138,9 +139,7 @@ export default async function ProfilePage({
 
   const theme = resolveThemeConfig(
     profile.themePreset,
-    profile.themeConfig
-      ? (JSON.parse(profile.themeConfig) as Partial<ThemeConfig>)
-      : null,
+    parseStoredThemeConfig(profile.themeConfig),
   );
 
   const emailSocial = profile.socialLinks.find((s) => s.platform === "email");
@@ -153,7 +152,10 @@ export default async function ProfilePage({
     "--pt-accent": theme.accent,
     "--pt-accent-ink": theme.accentInk,
     fontFamily: DISPLAY_FONT_STACK[theme.displayFont],
-    background: "var(--pt-bg)",
+    // backgroundColor, NOT the `background` shorthand: this is an inline
+    // style, so it outranks the stylesheet, and the shorthand would reset
+    // background-image — wiping the [data-pattern] texture entirely.
+    backgroundColor: "var(--pt-bg)",
     color: "var(--pt-ink)",
   };
 
@@ -207,6 +209,7 @@ export default async function ProfilePage({
       className="min-h-screen"
       style={containerStyle}
     >
+      <ViewBeacon username={profile.username} />
       <div className="mx-auto w-full max-w-[560px] px-5 py-14">
         <header className="animate-rise-in flex flex-col items-center gap-4 text-center">
           {profile.avatarEnabled &&

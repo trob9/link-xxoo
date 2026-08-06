@@ -206,12 +206,12 @@ function SortableLinkRow({ link }: { link: DashboardLink }) {
           }}
         />
 
-        <div className="flex shrink-0 items-center">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             variant={featured ? "primary" : "ghost"}
             size="sm"
-            aria-label="Toggle featured"
-            className="mr-[5px]"
+            aria-label={featured ? "Unfeature link" : "Feature link"}
+            aria-pressed={featured}
             onClick={() => {
               const next = !featured;
               setFeatured(next);
@@ -223,15 +223,12 @@ function SortableLinkRow({ link }: { link: DashboardLink }) {
           <Button
             variant="secondary"
             size="sm"
+            aria-expanded={editing}
             onClick={() => setEditing((e) => !e)}
           >
             Edit
           </Button>
-          <form action={deleteLink.bind(null, link.id)} className="ml-[15px]">
-            <Button type="submit" variant="danger" size="sm">
-              Delete
-            </Button>
-          </form>
+          <DeleteLinkButton id={link.id} title={link.title} />
         </div>
       </div>
 
@@ -239,6 +236,50 @@ function SortableLinkRow({ link }: { link: DashboardLink }) {
         <EditLinkForm link={link} onDone={() => setEditing(false)} />
       ) : null}
     </li>
+  );
+}
+
+/**
+ * Delete asks first. It's the only destructive control on this row and it
+ * sits a few pixels from "Edit", so a mis-click used to be unrecoverable —
+ * there is no undo and no trash.
+ */
+function DeleteLinkButton({ id, title }: { id: string; title: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, startDelete] = useTransition();
+
+  if (!confirming) {
+    return (
+      <Button
+        variant="danger"
+        size="sm"
+        aria-label={`Delete ${title}`}
+        onClick={() => setConfirming(true)}
+      >
+        Delete
+      </Button>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={deleting}
+        onClick={() => setConfirming(false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="danger"
+        size="sm"
+        disabled={deleting}
+        onClick={() => startDelete(() => deleteLink(id))}
+      >
+        {deleting ? "Deleting…" : "Confirm"}
+      </Button>
+    </span>
   );
 }
 

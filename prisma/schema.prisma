@@ -38,14 +38,49 @@ model Profile {
   seoDescription   String?
   sensitiveContent Boolean @default(false)
 
-  themePreset String  @default("dawn")
-  themeConfig String? // JSON blob of ThemeConfig overrides
+  // The live look is themePreset + themeConfig, in that order: themeConfig is
+  // a JSON object spread over the preset's config, so it works whether it
+  // holds a couple of overrides (how it was first used) or a whole theme (how
+  // the editor writes it now). activeThemeId records which saved theme the
+  // live look came from — a UI hint for "which card is selected", not a
+  // second source of truth for the colours.
+  themePreset   String  @default("dawn")
+  themeConfig   String?
+  activeThemeId String?
 
-  socialLinks SocialLink[]
-  links       Link[]
+  socialLinks  SocialLink[]
+  links        Link[]
+  customThemes CustomTheme[]
+  views        ProfileView[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// A theme the owner designed and named. Real rows rather than a JSON array on
+// Profile because each one is independently created, renamed, edited and
+// deleted, and needs a stable id to be re-selected later — an array in a blob
+// would mean hand-rolling ids and rewriting every theme to change one.
+model CustomTheme {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String
+
+  background        String
+  surface           String
+  ink               String
+  inkMuted          String
+  accent            String
+  accentInk         String
+  buttonStyle       String
+  backgroundPattern String
+  displayFont       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
 }
 
 model SocialLink {
@@ -82,6 +117,18 @@ model Link {
   updatedAt DateTime @updatedAt
 
   @@index([profileId, order])
+}
+
+// One row per page view of a public profile. Clicks were already recorded, so
+// without this the dashboard could show "142 clicks" but never answer "out of
+// how many visits" — a click-through rate needs both halves.
+model ProfileView {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([profileId, createdAt])
 }
 
 model ClickEvent {

@@ -57,9 +57,7 @@ export default async function DashboardPage() {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl">Your links</h1>
-            <p className="text-sm text-ink-muted">
-              Drag to reorder — the order here is the order on your public page.
-            </p>
+            <p className="text-sm text-ink-muted">Drag to reorder.</p>
           </div>
           <span className="font-stat text-sm text-ink-muted">
             {data.length} {data.length === 1 ? "link" : "links"}
@@ -70,9 +68,8 @@ export default async function DashboardPage() {
 
         {featuredCount > FEATURED_SOFT_LIMIT ? (
           <p className="rounded-md border-hard bg-accent-secondary px-4 py-3 text-sm font-semibold text-accent-secondary-ink">
-            {featuredCount} links are featured. Featured links get pulled to the
-            top and styled more heavily — past about {FEATURED_SOFT_LIMIT} they
-            stop standing out from each other.
+            {featuredCount} links featured — past about {FEATURED_SOFT_LIMIT},
+            none of them stands out.
           </p>
         ) : null}
 
@@ -83,7 +80,7 @@ export default async function DashboardPage() {
         <header>
           <h2 className="font-display text-2xl">Social icons</h2>
           <p className="text-sm text-ink-muted">
-            A row of icons below your links. Drag to reorder.
+            Shown under your links. Drag to reorder.
           </p>
         </header>
 

@@ -19,8 +19,7 @@ export default async function OnboardingPage() {
           Claim your link
         </h1>
         <p className="mt-2 text-sm text-ink-muted">
-          This is your public address — the one link you put everywhere. You can
-          change everything else later, but pick a name you like.
+          This is your public address. Everything else you can change later.
         </p>
         <ClaimForm />
       </Panel>

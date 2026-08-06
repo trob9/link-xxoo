@@ -16,27 +16,34 @@ async function main() {
     create: { discordId: TEST_USER.discordId },
   });
 
-  const resetAvatarFields = {
+  // Every mutable field the suite touches is reset here, not just the ones a
+  // given test uses: the dashboard tests run serially against one shared
+  // sqlite file, so anything left behind becomes the next test's start state.
+  const resetFields = {
     displayName: TEST_USER.displayName,
     avatarUrl: null,
     avatarImage: null,
     avatarShape: "circle",
     avatarEnabled: true,
+    themePreset: "dawn",
+    themeConfig: null,
+    activeThemeId: null,
   };
 
   const profile = await prisma.profile.upsert({
     where: { userId: user.id },
-    update: resetAvatarFields,
+    update: resetFields,
     create: {
       userId: user.id,
       username: TEST_USER.username,
-      themePreset: "dawn",
-      ...resetAvatarFields,
+      ...resetFields,
     },
   });
 
   await prisma.link.deleteMany({ where: { profileId: profile.id } });
   await prisma.socialLink.deleteMany({ where: { profileId: profile.id } });
+  await prisma.customTheme.deleteMany({ where: { profileId: profile.id } });
+  await prisma.profileView.deleteMany({ where: { profileId: profile.id } });
   await prisma.link.create({
     data: {
       profileId: profile.id,

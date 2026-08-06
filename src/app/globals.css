@@ -71,6 +71,19 @@ h3,
   letter-spacing: -0.01em;
 }
 
+/*
+  A public profile picks its own display font, set as an inline font-family on
+  the page container and inherited by everything inside it. Headings are the
+  one exception: the rule above matches them directly, and a matching rule
+  always beats an inherited value — so without this the owner's font choice
+  applied to every word on the page except their own name.
+*/
+[data-profile] h1,
+[data-profile] h2,
+[data-profile] h3 {
+  font-family: inherit;
+}
+
 .font-stat {
   font-family: var(--font-stat), monospace;
 }
@@ -149,8 +162,8 @@ h3,
 */
 [data-pattern="dots"] {
   background-image: radial-gradient(
-    color-mix(in srgb, var(--pt-ink) 14%, transparent) 1.5px,
-    transparent 1.5px
+    color-mix(in srgb, var(--pt-ink) 18%, transparent) 1.6px,
+    transparent 1.6px
   );
   background-size: 18px 18px;
 }
@@ -159,12 +172,12 @@ h3,
   background-image:
     linear-gradient(
       to right,
-      color-mix(in srgb, var(--pt-ink) 10%, transparent) 1px,
+      color-mix(in srgb, var(--pt-ink) 13%, transparent) 1px,
       transparent 1px
     ),
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--pt-ink) 10%, transparent) 1px,
+      color-mix(in srgb, var(--pt-ink) 13%, transparent) 1px,
       transparent 1px
     );
   background-size: 26px 26px;

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   avatarDisplaySchema,
+  avatarShapeSchema,
   linkSchema,
   normalizeSocialUrl,
   profileSettingsSchema,
   socialLinkSchema,
+  themeConfigSchema,
+  themeNameSchema,
   usernameSchema,
 } from "@/lib/validation";
 
@@ -230,21 +233,78 @@ describe("profileSettingsSchema", () => {
 });
 
 describe("avatarDisplaySchema", () => {
-  it("accepts a valid shape and enabled flag", () => {
-    const result = avatarDisplaySchema.parse({
-      avatarShape: "rounded",
-      avatarEnabled: true,
-    });
-    expect(result.avatarShape).toBe("rounded");
-    expect(result.avatarEnabled).toBe(true);
+  it("accepts the enabled flag", () => {
+    expect(avatarDisplaySchema.parse({ avatarEnabled: true }).avatarEnabled).toBe(
+      true,
+    );
+  });
+
+  it("rejects a missing flag", () => {
+    expect(() => avatarDisplaySchema.parse({})).toThrow();
+  });
+});
+
+describe("avatarShapeSchema", () => {
+  it("accepts a known shape", () => {
+    expect(avatarShapeSchema.parse("rounded")).toBe("rounded");
   });
 
   it("rejects an unknown shape", () => {
+    expect(() => avatarShapeSchema.parse("hexagon")).toThrow();
+  });
+});
+
+describe("themeConfigSchema", () => {
+  const valid = {
+    background: "#efe6d4",
+    surface: "#fffdf8",
+    ink: "#211d1a",
+    inkMuted: "#6b6259",
+    accent: "#ff5c39",
+    accentInk: "#1c1108",
+    buttonStyle: "raised",
+    backgroundPattern: "dots",
+    displayFont: "fraunces",
+  };
+
+  it("accepts a full theme", () => {
+    expect(themeConfigSchema.parse(valid).accent).toBe("#ff5c39");
+  });
+
+  it("lowercases hex colours so saved and preset values compare equal", () => {
+    expect(themeConfigSchema.parse({ ...valid, accent: "#FF5C39" }).accent).toBe(
+      "#ff5c39",
+    );
+  });
+
+  // Every colour lands in an inline style attribute on the public page, so
+  // anything that isn't a hex value is a CSS-injection vector, not a typo.
+  it("rejects a colour that isn't a hex value", () => {
     expect(() =>
-      avatarDisplaySchema.parse({
-        avatarShape: "hexagon",
-        avatarEnabled: true,
-      }),
+      themeConfigSchema.parse({ ...valid, background: "red; position:fixed" }),
     ).toThrow();
+    expect(() =>
+      themeConfigSchema.parse({ ...valid, ink: "var(--x)" }),
+    ).toThrow();
+  });
+
+  it("rejects unknown enum values", () => {
+    expect(() =>
+      themeConfigSchema.parse({ ...valid, buttonStyle: "glossy" }),
+    ).toThrow();
+    expect(() =>
+      themeConfigSchema.parse({ ...valid, displayFont: "comic-sans" }),
+    ).toThrow();
+  });
+});
+
+describe("themeNameSchema", () => {
+  it("trims and accepts a normal name", () => {
+    expect(themeNameSchema.parse("  Midnight  ")).toBe("Midnight");
+  });
+
+  it("rejects blank and over-long names", () => {
+    expect(() => themeNameSchema.parse("   ")).toThrow();
+    expect(() => themeNameSchema.parse("a".repeat(41))).toThrow();
   });
 });

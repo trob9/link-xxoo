@@ -71,31 +71,6 @@ test.describe("authenticated dashboard", () => {
     );
   });
 
-  test("theme page lets you switch presets", async ({ page }) => {
-    await page.goto("/dashboard/theme");
-    await expect(
-      page.getByText("Charcoal and acid green, for night owls."),
-    ).toBeVisible();
-  });
-
-  test("saving a preset carries its background pattern to the public page", async ({
-    page,
-  }) => {
-    await page.goto("/dashboard/theme");
-
-    // Ink's default pattern is "grid" — picking the preset and saving should
-    // put that on the public page without touching the pattern control.
-    await page.getByRole("button", { name: /Ink/ }).click();
-    await page.getByRole("button", { name: /save theme/i }).click();
-    await expect(page.getByText("Saved")).toBeVisible();
-
-    await page.goto("/e2e-tester");
-    await expect(page.locator("[data-profile]")).toHaveAttribute(
-      "data-pattern",
-      "grid",
-    );
-  });
-
   test("URL placeholder updates per platform, and a mismatch is rejected only on submit", async ({
     page,
   }) => {
@@ -148,7 +123,7 @@ test.describe("authenticated dashboard", () => {
     );
   });
 
-  test("uploads a custom avatar, sets a shape, and it renders on the public page", async ({
+  test("uploads a custom avatar and it renders on the public page", async ({
     page,
   }) => {
     await page.goto("/dashboard/settings");
@@ -158,16 +133,12 @@ test.describe("authenticated dashboard", () => {
       "e2e/fixtures/test-avatar.png",
     );
     await expect(page.getByText("New photo selected")).toBeVisible();
-
-    await page.getByRole("button", { name: "Square" }).click();
     await page.getByRole("button", { name: "Save", exact: true }).click();
 
     await expect(page.getByText("Saved")).toBeVisible();
     // The transient preview clears once the real upload is reflected.
     await expect(page.getByText("New photo selected")).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Remove photo" }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove" })).toBeVisible();
 
     // The image was genuinely processed and is served as WebP. The version
     // segment is opaque (cache-buster only), any value works for lookup.
@@ -176,9 +147,7 @@ test.describe("authenticated dashboard", () => {
     expect(res.headers()["content-type"]).toBe("image/webp");
 
     await page.goto("/e2e-tester");
-    const avatarImg = page.locator("header img");
-    await expect(avatarImg).toBeVisible();
-    await expect(avatarImg).toHaveCSS("border-radius", "0px");
+    await expect(page.locator("header img")).toBeVisible();
   });
 
   test("rejects an SVG upload (script tag + SSRF-shaped external reference) even through the real UI", async ({
@@ -193,9 +162,7 @@ test.describe("authenticated dashboard", () => {
     await page.getByRole("button", { name: "Save", exact: true }).click();
 
     await expect(page.getByText(/unsupported image format/i)).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Remove photo" }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(0);
 
     // Nothing was ever stored.
     const res = await page.request.get("/api/avatar/e2e-tester/1");

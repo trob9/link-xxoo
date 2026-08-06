@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 import { Panel } from "@/components/ui/panel";
@@ -35,17 +36,20 @@ export default async function SettingsPage() {
         moved next to the links.
       */}
       <Panel className="flex flex-col gap-4">
-        <div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-display text-xl">Profile picture</h2>
-          <p className="text-sm text-ink-muted">
-            Shown at the top of your public page.
-          </p>
+          <Link
+            href="/dashboard/theme"
+            className="text-xs font-semibold uppercase tracking-wide text-ink-muted underline underline-offset-4 hover:text-ink"
+          >
+            Change shape
+          </Link>
         </div>
         <AvatarUploader
           displayName={profile.displayName}
           currentSrc={avatarSrc}
           hasCustomImage={hasCustomAvatar}
-          initialShape={profile.avatarShape as AvatarShape}
+          shape={profile.avatarShape as AvatarShape}
           initialEnabled={profile.avatarEnabled}
         />
       </Panel>

@@ -66,3 +66,6 @@ skills-lock.json
 
 # Refine-pass notes — local working memory, not part of the product
 .refine/
+
+# e2e scratch: the throwaway sqlite file the Playwright global-setup builds
+/e2e/.tmp/

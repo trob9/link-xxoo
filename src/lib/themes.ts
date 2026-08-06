@@ -13,6 +13,42 @@ export const BACKGROUND_PATTERN_LABELS: Record<BackgroundPattern, string> = {
   grid: "Grid",
 };
 
+export const BUTTON_STYLE_LABELS: Record<ButtonStyle, string> = {
+  raised: "Raised",
+  flat: "Flat",
+  outline: "Outline",
+};
+
+export const DISPLAY_FONTS = ["fraunces", "space-grotesk", "space-mono"] as const;
+export type DisplayFont = (typeof DISPLAY_FONTS)[number];
+
+export const DISPLAY_FONT_LABELS: Record<DisplayFont, string> = {
+  fraunces: "Serif",
+  "space-grotesk": "Sans",
+  "space-mono": "Mono",
+};
+
+// The six colour slots, in the order the editor shows them: page-level
+// colours first, then the two that only affect buttons.
+export const THEME_COLOR_KEYS = [
+  "background",
+  "surface",
+  "ink",
+  "inkMuted",
+  "accent",
+  "accentInk",
+] as const;
+export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
+
+export const THEME_COLOR_LABELS: Record<ThemeColorKey, string> = {
+  background: "Page",
+  surface: "Cards",
+  ink: "Text",
+  inkMuted: "Secondary text",
+  accent: "Buttons",
+  accentInk: "Button text",
+};
+
 export type ThemeConfig = {
   background: string;
   surface: string;
@@ -22,7 +58,7 @@ export type ThemeConfig = {
   accentInk: string;
   buttonStyle: ButtonStyle;
   backgroundPattern: BackgroundPattern;
-  displayFont: "fraunces" | "space-grotesk" | "space-mono";
+  displayFont: DisplayFont;
 };
 
 export type ThemePreset = {
@@ -78,7 +114,9 @@ export const THEME_PRESETS: ThemePreset[] = [
       ink: "#1c1a2e",
       inkMuted: "#5c5470",
       accent: "#ff3d7f",
-      accentInk: "#fff7fa",
+      // Deep plum, not the near-white it used to be: white on this pink is
+      // 3.2:1, which the editor's own readability check calls unreadable.
+      accentInk: "#2a0a18",
       buttonStyle: "flat",
       backgroundPattern: "dots",
       displayFont: "fraunces",
@@ -138,15 +176,73 @@ export function getThemePreset(key: string): ThemePreset {
   return THEME_PRESETS.find((preset) => preset.key === key) ?? THEME_PRESETS[0];
 }
 
-export function resolveThemeConfig(
-  presetKey: string,
-  overrides: Partial<ThemeConfig> | null | undefined,
-): ThemeConfig {
-  const preset = getThemePreset(presetKey);
-  return { ...preset.config, ...(overrides ?? {}) };
+export function isPresetKey(key: string): boolean {
+  return THEME_PRESETS.some((preset) => preset.key === key);
 }
 
-export const DISPLAY_FONT_STACK: Record<ThemeConfig["displayFont"], string> = {
+/**
+ * The live look. `stored` is spread over the preset, so this behaves the same
+ * whether it holds a couple of overrides (how themeConfig was first used) or a
+ * whole theme (how the editor writes it now) — which is why saving full
+ * configs needed no data migration.
+ */
+export function resolveThemeConfig(
+  presetKey: string,
+  stored: Partial<ThemeConfig> | null | undefined,
+): ThemeConfig {
+  const preset = getThemePreset(presetKey);
+  return { ...preset.config, ...(stored ?? {}) };
+}
+
+/** Tolerant parse of the themeConfig column — bad JSON just means "no overrides". */
+export function parseStoredThemeConfig(
+  raw: string | null | undefined,
+): Partial<ThemeConfig> {
+  if (!raw) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Partial<ThemeConfig>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+const THEME_CONFIG_KEYS = [
+  ...THEME_COLOR_KEYS,
+  "buttonStyle",
+  "backgroundPattern",
+  "displayFont",
+] as const;
+
+/** True when two configs describe the same look. Drives the "unsaved changes" bar. */
+export function themeConfigsEqual(a: ThemeConfig, b: ThemeConfig): boolean {
+  return THEME_CONFIG_KEYS.every((key) => {
+    const av = a[key];
+    const bv = b[key];
+    return typeof av === "string" && typeof bv === "string"
+      ? av.toLowerCase() === bv.toLowerCase()
+      : av === bv;
+  });
+}
+
+/** Narrows an arbitrary record (a CustomTheme row) to just the theme fields. */
+export function toThemeConfig(source: ThemeConfig): ThemeConfig {
+  return {
+    background: source.background,
+    surface: source.surface,
+    ink: source.ink,
+    inkMuted: source.inkMuted,
+    accent: source.accent,
+    accentInk: source.accentInk,
+    buttonStyle: source.buttonStyle,
+    backgroundPattern: source.backgroundPattern,
+    displayFont: source.displayFont,
+  };
+}
+
+export const DISPLAY_FONT_STACK: Record<DisplayFont, string> = {
   fraunces: "var(--font-display), serif",
   "space-grotesk": "var(--font-body), sans-serif",
   "space-mono": "var(--font-stat), monospace",

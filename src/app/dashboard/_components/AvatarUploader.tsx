@@ -1,15 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  AVATAR_SHAPE_RADIUS,
-  AVATAR_SHAPES,
-  type AvatarShape,
-} from "@/lib/avatar-shape";
+import { AVATAR_SHAPE_RADIUS, type AvatarShape } from "@/lib/avatar-shape";
 import {
   removeAvatarImage,
   updateAvatar,
@@ -18,30 +13,28 @@ import {
 
 const initialState: SettingsState = {};
 
-const SHAPE_LABEL: Record<AvatarShape, string> = {
-  circle: "Circle",
-  rounded: "Rounded",
-  square: "Square",
-};
-
+/**
+ * The picture itself — choose a file, remove it, hide it. Its *shape* is a
+ * design choice and is edited on the Theme page; this form only mirrors the
+ * saved shape so the preview looks like the real thing.
+ */
 export function AvatarUploader({
   displayName,
   currentSrc,
   hasCustomImage,
-  initialShape,
+  shape,
   initialEnabled,
 }: {
   displayName: string;
   currentSrc: string | null;
   hasCustomImage: boolean;
-  initialShape: AvatarShape;
+  shape: AvatarShape;
   initialEnabled: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     updateAvatar,
     initialState,
   );
-  const [shape, setShape] = useState<AvatarShape>(initialShape);
   const [enabled, setEnabled] = useState(initialEnabled);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,12 +67,12 @@ export function AvatarUploader({
     setPreviewSrc(null);
   }
 
-  // On a successful save, the parent Server Component re-fetches and passes
-  // a fresh currentSrc reflecting the upload — drop the transient
-  // object-URL preview so we switch over to showing that, instead of
-  // claiming "new photo selected" forever. State adjustment happens during
-  // render (not in the effect below) per React's "adjusting state" pattern;
-  // the effect only does the imperative object-URL/file-input cleanup.
+  // On a successful save, the parent Server Component re-fetches and passes a
+  // fresh currentSrc reflecting the upload — drop the transient object-URL
+  // preview so we switch over to showing that, instead of claiming "new photo
+  // selected" forever. State adjustment happens during render (not in the
+  // effect below) per React's "adjusting state" pattern; the effect only does
+  // the imperative object-URL/file-input cleanup.
   const [prevOk, setPrevOk] = useState(state.ok);
   if (state.ok !== prevOk) {
     setPrevOk(state.ok);
@@ -100,110 +93,73 @@ export function AvatarUploader({
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Profile picture shape
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          {AVATAR_SHAPES.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setShape(option)}
-              className={cn(
-                "flex flex-col items-center gap-2 rounded-md border-2 p-3",
-                shape === option
-                  ? "border-border-strong bg-surface-raised shadow-hard-sm ring-2 ring-action-primary"
-                  : "border-border-strong bg-surface-raised hover:-translate-y-0.5",
-              )}
-            >
-              <div
-                className="grid h-16 w-16 place-items-center overflow-hidden border-2 border-border-strong bg-surface text-lg font-bold"
-                style={{ borderRadius: AVATAR_SHAPE_RADIUS[option] }}
-              >
-                {effectiveSrc ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={effectiveSrc}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span aria-hidden>{initial}</span>
-                )}
-              </div>
-              <span className="text-xs font-semibold uppercase tracking-wide">
-                {SHAPE_LABEL[option]}
-              </span>
-            </button>
-          ))}
-        </div>
-        <input type="hidden" name="avatarShape" value={shape} />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
+      <div className="flex flex-wrap items-center gap-4">
+        <div
+          className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden border-2 border-border-strong bg-surface-raised text-2xl font-bold"
+          style={{ borderRadius: AVATAR_SHAPE_RADIUS[shape] }}
         >
-          Choose photo
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          name="avatar"
-          accept="image/*"
-          onChange={onFileChange}
-          className="hidden"
-        />
-        {previewSrc ? (
-          <button
-            type="button"
-            onClick={clearPendingFile}
-            className="text-xs font-semibold uppercase tracking-wide text-ink-muted underline"
-          >
-            Cancel selection
-          </button>
-        ) : hasCustomImage ? (
-          // A nested <form> inside the outer one isn't valid HTML, so this
-          // calls the server action directly instead of using action=.
+          {effectiveSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={effectiveSrc} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span aria-hidden>{initial}</span>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             type="button"
-            variant="danger"
+            variant="secondary"
             size="sm"
-            disabled={removing}
-            onClick={() => startRemoveTransition(() => removeAvatarImage())}
+            onClick={() => fileInputRef.current?.click()}
           >
-            {removing ? "Removing…" : "Remove photo"}
+            Choose photo
           </Button>
-        ) : null}
-        {previewSrc ? <Badge>New photo selected</Badge> : null}
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="avatar"
+            accept="image/*"
+            onChange={onFileChange}
+            className="hidden"
+          />
+          {previewSrc ? (
+            <>
+              <Badge>New photo selected</Badge>
+              <button
+                type="button"
+                onClick={clearPendingFile}
+                className="text-xs font-semibold uppercase tracking-wide text-ink-muted underline"
+              >
+                Cancel
+              </button>
+            </>
+          ) : hasCustomImage ? (
+            // A nested <form> inside the outer one isn't valid HTML, so this
+            // calls the server action directly instead of using action=.
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              disabled={removing}
+              onClick={() => startRemoveTransition(() => removeAvatarImage())}
+            >
+              {removing ? "Removing…" : "Remove"}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
-      <p className="text-xs text-ink-muted">
-        JPG, PNG, GIF, or WebP, up to 8MB — auto-converted to WebP and
-        cropped to a square.
-      </p>
+      <p className="text-xs text-ink-muted">JPG, PNG, GIF or WebP, up to 8MB.</p>
 
-      <div className="flex items-center justify-between rounded-md border-hard bg-surface-raised p-3">
-        <div>
-          <p className="text-sm font-semibold">Show profile picture</p>
-          <p className="text-xs text-ink-muted">
-            Turn off to hide it entirely on your public page.
-          </p>
-        </div>
+      <div className="flex items-center justify-between gap-4 rounded-md border-hard bg-surface-raised p-3">
+        <p className="text-sm font-semibold">Show on my page</p>
         <Switch
           checked={enabled}
           label="Show profile picture"
           onChange={setEnabled}
         />
-        <input
-          type="hidden"
-          name="avatarEnabled"
-          value={enabled ? "on" : "off"}
-        />
+        <input type="hidden" name="avatarEnabled" value={enabled ? "on" : "off"} />
       </div>
 
       {state.error ? (

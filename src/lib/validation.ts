@@ -2,6 +2,11 @@ import { z } from "zod";
 import { isSingleEmoji } from "@/lib/emoji";
 import { normalizeUrlInput } from "@/lib/url-normalize";
 import { AVATAR_SHAPES } from "@/lib/avatar-shape";
+import {
+  BACKGROUND_PATTERNS,
+  BUTTON_STYLES,
+  DISPLAY_FONTS,
+} from "@/lib/themes";
 
 export const RESERVED_USERNAMES = new Set([
   "admin",
@@ -157,6 +162,34 @@ export const profileSettingsSchema = z.object({
 });
 
 export const avatarDisplaySchema = z.object({
-  avatarShape: z.enum(AVATAR_SHAPES),
   avatarEnabled: z.boolean(),
 });
+
+export const avatarShapeSchema = z.enum(AVATAR_SHAPES);
+
+// Every colour a theme carries goes straight into an inline `style` attribute
+// on the public page, so "must be a hex colour" is the boundary that stops
+// arbitrary CSS being injected there — not just a formatting preference.
+const hexColor = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^#[0-9a-f]{6}$/, "Must be a hex colour like #ff5c39");
+
+export const themeConfigSchema = z.object({
+  background: hexColor,
+  surface: hexColor,
+  ink: hexColor,
+  inkMuted: hexColor,
+  accent: hexColor,
+  accentInk: hexColor,
+  buttonStyle: z.enum(BUTTON_STYLES),
+  backgroundPattern: z.enum(BACKGROUND_PATTERNS),
+  displayFont: z.enum(DISPLAY_FONTS),
+});
+
+export const themeNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Give it a name")
+  .max(40, "At most 40 characters");

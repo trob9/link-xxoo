@@ -52,9 +52,10 @@ export async function updateProfileSettings(
   return { ok: true };
 }
 
-// One combined action: shape + visibility always save, and if a new file
-// was chosen, it's processed and stored in the same submit — one form, one
-// button, rather than juggling separate upload/settings saves.
+// The picture itself: the file plus whether it shows at all. Its *shape* is a
+// design choice and lives on the Theme page next to button style, so it is
+// deliberately absent here — this action must never write avatarShape, or the
+// two pages would fight over the same column.
 export async function updateAvatar(
   _prev: SettingsState,
   formData: FormData,
@@ -62,7 +63,6 @@ export async function updateAvatar(
   const { profile } = await requireProfile();
 
   const parsed = avatarDisplaySchema.safeParse({
-    avatarShape: formData.get("avatarShape"),
     avatarEnabled: formData.get("avatarEnabled") === "on",
   });
   if (!parsed.success) {
@@ -96,7 +96,6 @@ export async function updateAvatar(
   await prisma.profile.update({
     where: { id: profile.id },
     data: {
-      avatarShape: parsed.data.avatarShape,
       avatarEnabled: parsed.data.avatarEnabled,
       // Prisma's Bytes field wants a plain Uint8Array<ArrayBuffer>; Node's
       // Buffer type is generic over ArrayBufferLike (incl. SharedArrayBuffer),
