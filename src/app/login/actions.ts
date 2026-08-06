@@ -9,3 +9,8 @@ export async function discordSignIn(formData: FormData) {
   const callbackUrl = safeRedirectPath(formData.get("callbackUrl") as string);
   await signIn("discord", { redirectTo: callbackUrl });
 }
+
+export async function googleSignIn(formData: FormData) {
+  const callbackUrl = safeRedirectPath(formData.get("callbackUrl") as string);
+  await signIn("google", { redirectTo: callbackUrl });
+}

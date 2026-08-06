@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { discordSignIn } from "./login/actions";
+import { SiteFooter } from "@/components/site-footer";
 
 const features = [
   {
@@ -21,8 +21,8 @@ const features = [
     body: "Every colour, font and button style. Save as many as you like, for free.",
   },
   {
-    title: "One-tap Discord sign-in",
-    body: "No password to invent or forget. Sign in with the account you already use.",
+    title: "One-tap Discord or Google sign-in",
+    body: "No password to invent or forget. Sign in with an account you already have.",
   },
   {
     title: "QR export",
@@ -71,12 +71,12 @@ export default async function Home() {
                 <Button size="md">Go to dashboard</Button>
               </Link>
             ) : (
-              <form action={discordSignIn}>
-                <input type="hidden" name="callbackUrl" value="/dashboard" />
-                <Button type="submit" size="md">
-                  Continue with Discord
-                </Button>
-              </form>
+              // Was a direct Discord sign-in form. With two providers the
+              // hero can't pick one for you, so it sends you to /login where
+              // both are offered.
+              <Link href="/login">
+                <Button size="md">Get started — it&rsquo;s free</Button>
+              </Link>
             )}
           </div>
         </div>
@@ -124,14 +124,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t-2 border-border-strong">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-sm text-ink-muted">
-          <span className="font-display font-semibold text-ink">
-            link.xxoo.ooo
-          </span>
-          <span>One link. Everything you make.</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Panel } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
 import { safeRedirectPath } from "@/lib/safe-redirect";
-import { discordSignIn } from "./actions";
+import { discordSignIn, googleSignIn } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -26,12 +27,49 @@ export default async function LoginPage({
           One link for everything you make. Sign in to build yours.
         </p>
 
-        <form action={discordSignIn} className="mt-8">
-          <input type="hidden" name="callbackUrl" value={destination} />
-          <Button type="submit" className="w-full">
-            Continue with Discord
-          </Button>
-        </form>
+        <div className="mt-8 flex flex-col gap-3">
+          <form action={discordSignIn}>
+            <input type="hidden" name="callbackUrl" value={destination} />
+            <Button type="submit" className="w-full">
+              Continue with Discord
+            </Button>
+          </form>
+
+          <form action={googleSignIn}>
+            <input type="hidden" name="callbackUrl" value={destination} />
+            <Button type="submit" variant="secondary" className="w-full">
+              Continue with Google
+            </Button>
+          </form>
+        </div>
+
+        {/*
+          Each provider is its own account. Saying so here is cheaper than
+          fielding "where did my links go" from someone who signed up with
+          Discord and later clicked Google.
+        */}
+        <p className="mt-5 text-xs text-ink-muted">
+          Discord and Google sign-ins are separate accounts. Use the same one
+          each time to reach your page.
+        </p>
+
+        <p className="mt-4 text-xs text-ink-muted">
+          By signing in you agree to the{" "}
+          <Link
+            href="/terms"
+            className="underline underline-offset-4 hover:text-ink"
+          >
+            Terms of Use
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy"
+            className="underline underline-offset-4 hover:text-ink"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </Panel>
     </main>
   );

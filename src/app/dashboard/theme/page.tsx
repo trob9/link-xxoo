@@ -15,10 +15,14 @@ const PLACEHOLDER_LINKS = [
   { title: "Newsletter", featured: false },
 ];
 
+// Same idea for the icon row: with no socials added yet the "Social icons"
+// colour would have nothing to paint, and the control would look broken.
+const PLACEHOLDER_SOCIALS = ["instagram", "x", "github", "email"];
+
 export default async function ThemePage() {
   const { profile } = await requireProfile();
 
-  const [savedThemes, links, hasCustomAvatar] = await Promise.all([
+  const [savedThemes, links, socials, hasCustomAvatar] = await Promise.all([
     prisma.customTheme.findMany({
       where: { profileId: profile.id },
       orderBy: { createdAt: "asc" },
@@ -28,6 +32,11 @@ export default async function ThemePage() {
       orderBy: [{ featured: "desc" }, { order: "asc" }],
       take: PREVIEW_LINK_LIMIT,
       select: { title: true, featured: true },
+    }),
+    prisma.socialLink.findMany({
+      where: { profileId: profile.id },
+      orderBy: { order: "asc" },
+      select: { platform: true },
     }),
     prisma.profile
       .count({ where: { id: profile.id, avatarImage: { not: null } } })
@@ -61,6 +70,11 @@ export default async function ThemePage() {
         avatarSrc={avatarSrc}
         avatarEnabled={profile.avatarEnabled}
         previewLinks={links.length > 0 ? links : PLACEHOLDER_LINKS}
+        previewSocials={
+          socials.length > 0
+            ? socials.map((s) => s.platform)
+            : PLACEHOLDER_SOCIALS
+        }
       />
     </div>
   );

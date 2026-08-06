@@ -21,7 +21,7 @@ export default async function DashboardLayout({
           <DashboardNav
             username={profile.username}
             displayName={profile.displayName}
-            avatarUrl={profile.user.discordAvatar ?? null}
+            avatarUrl={profile.user.providerAvatar ?? null}
             signOutAction={doSignOut}
           />
         </div>

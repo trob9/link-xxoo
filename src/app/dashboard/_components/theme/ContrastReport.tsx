@@ -27,7 +27,7 @@ function pairsFor(config: ThemeConfig): Pair[] {
       fg: config.inkMuted,
       bg: config.background,
     },
-    { label: "Text on cards", fix: "ink", fg: config.ink, bg: config.surface },
+    { label: "Social icons", fix: "ink", fg: config.ink, bg: config.surface },
     {
       label: "Button label",
       fix: "accentInk",
@@ -73,7 +73,7 @@ export function ContrastReport({
         <h3 className="text-sm font-semibold">Readability</h3>
         <p className="text-xs text-ink-muted">
           {problems === 0
-            ? "All text passes WCAG AA"
+            ? "All text easily readable"
             : `${problems} combination${problems === 1 ? "" : "s"} hard to read`}
         </p>
       </div>

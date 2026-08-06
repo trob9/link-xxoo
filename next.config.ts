@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.discordapp.com",
       },
+      // Google profile pictures. Onboarding copies the provider's avatar URL
+      // into Profile.avatarUrl, which the public page renders with
+      // next/image — an unlisted host throws there rather than degrading.
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
 };

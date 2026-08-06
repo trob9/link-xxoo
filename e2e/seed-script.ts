@@ -11,9 +11,17 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
 
   const user = await prisma.user.upsert({
-    where: { discordId: TEST_USER.discordId },
+    where: {
+      provider_providerAccountId: {
+        provider: TEST_USER.provider,
+        providerAccountId: TEST_USER.providerAccountId,
+      },
+    },
     update: {},
-    create: { discordId: TEST_USER.discordId },
+    create: {
+      provider: TEST_USER.provider,
+      providerAccountId: TEST_USER.providerAccountId,
+    },
   });
 
   // Every mutable field the suite touches is reset here, not just the ones a

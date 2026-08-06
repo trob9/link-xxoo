@@ -29,8 +29,16 @@ npx prisma migrate dev   # first time only — creates dev.db
 npm run dev
 ```
 
-Open http://localhost:3000. The app runs fully without Discord credentials set —
+Open http://localhost:3000. The app runs fully without OAuth credentials set —
 you just can't complete a sign-in until you add them (see below).
+
+## Sign-in providers
+
+Discord and Google are both supported, and **each is its own account**: a
+Google sign-in never joins an existing Discord account even when the email
+address matches. Identity is the `(provider, providerAccountId)` pair, never
+the email — so control of a mailbox can't get anyone into someone else's
+profile.
 
 ## Discord OAuth setup (manual step required)
 
@@ -51,6 +59,29 @@ interactive, authenticated browser session.
    AUTH_DISCORD_SECRET="your client secret"
    ```
 6. Restart the dev server / redeploy. Discord login now works end-to-end.
+
+## Google OAuth setup (manual step required)
+
+1. Go to https://console.cloud.google.com/auth/clients and create an
+   **OAuth client ID** of type *Web application*.
+2. **Authorized JavaScript origins** — scheme + host only, no path:
+   - `http://localhost:3000` (local dev)
+   - `https://link.xxoo.ooo` (production)
+3. **Authorized redirect URIs** — Auth.js mounts at `/api/auth`, and the
+   provider callback is always `/api/auth/callback/<provider id>`:
+   - `http://localhost:3000/api/auth/callback/google` (local dev)
+   - `https://link.xxoo.ooo/api/auth/callback/google` (production)
+4. Publish the app on the **Audience** screen, otherwise only test users
+   you list by hand can sign in.
+5. Put the values in `.env` (local) or `.env.production` (deploy host):
+   ```
+   AUTH_GOOGLE_ID="your client id"
+   AUTH_GOOGLE_SECRET="your client secret"
+   ```
+
+Google serves profile pictures from `lh3.googleusercontent.com`, so the
+deploy host's `Content-Security-Policy` (`img-src`) has to allow it — see
+the site's entry in the deployment framework's `sites.yaml`.
 
 ## Tests
 

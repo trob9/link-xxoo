@@ -1,6 +1,7 @@
 // Prisma schema for link.xxoo.ooo
-// Auth is JWT-based (Discord OAuth via Auth.js) — no Account/Session tables needed,
-// we just upsert a User row keyed by discordId on sign-in.
+// Auth is JWT-based (Discord + Google OAuth via Auth.js) — no Account/Session
+// tables needed, we just upsert a User row keyed by (provider,
+// providerAccountId) on sign-in.
 
 generator client {
   provider = "prisma-client"
@@ -12,14 +13,23 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  discordId     String   @unique
-  discordAvatar String?
-  email         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id String @id @default(cuid())
+
+  // Identity is the (provider, id-at-that-provider) pair, not the email.
+  // Signing in with Google therefore creates its own account even when the
+  // email matches an existing Discord user — deliberate, so a compromised
+  // mailbox can never reach someone else's profile.
+  provider          String
+  providerAccountId String
+  providerAvatar    String?
+
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   profile Profile?
+
+  @@unique([provider, providerAccountId])
 }
 
 model Profile {

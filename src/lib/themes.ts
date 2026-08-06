@@ -29,7 +29,9 @@ export const DISPLAY_FONT_LABELS: Record<DisplayFont, string> = {
 };
 
 // The six colour slots, in the order the editor shows them: page-level
-// colours first, then the two that only affect buttons.
+// colours first, then the two that only affect buttons. `surface` is the
+// fill behind the social icon tiles (and the letter avatar) — nothing else
+// on the public page uses it, hence the "Social icons" label.
 export const THEME_COLOR_KEYS = [
   "background",
   "surface",
@@ -42,7 +44,7 @@ export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
 
 export const THEME_COLOR_LABELS: Record<ThemeColorKey, string> = {
   background: "Page",
-  surface: "Cards",
+  surface: "Social icons",
   ink: "Text",
   inkMuted: "Secondary text",
   accent: "Buttons",

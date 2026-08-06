@@ -74,6 +74,7 @@ export function ThemeEditor({
   avatarSrc,
   avatarEnabled,
   previewLinks,
+  previewSocials,
 }: {
   initialConfig: ThemeConfig;
   initialAvatarShape: AvatarShape;
@@ -85,6 +86,7 @@ export function ThemeEditor({
   avatarSrc: string | null;
   avatarEnabled: boolean;
   previewLinks: { title: string; featured: boolean }[];
+  previewSocials: string[];
 }) {
   const [config, setConfig] = useState(initialConfig);
   const [avatarShape, setAvatarShape] = useState(initialAvatarShape);
@@ -220,6 +222,7 @@ export function ThemeEditor({
           displayName={displayName}
           bio={bio}
           links={previewLinks}
+          socials={previewSocials}
         />
       </div>
 

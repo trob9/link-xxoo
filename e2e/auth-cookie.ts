@@ -12,10 +12,10 @@ export async function mintSessionCookie(profile: {
     secret,
     salt: "authjs.session-token",
     token: {
-      sub: TEST_USER.discordId,
+      sub: TEST_USER.providerAccountId,
       userId: profile.userId,
       username: profile.username,
-      discordId: TEST_USER.discordId,
+      provider: TEST_USER.provider,
       name: TEST_USER.displayName,
     },
   });

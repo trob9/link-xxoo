@@ -1,16 +1,23 @@
 "use client";
 
 import { buttonStyleVariant } from "@/lib/button-style";
+import { socialIconStyle } from "@/lib/social-icon-style";
+import { SocialIcon } from "@/components/social-icon";
 import { AVATAR_SHAPE_RADIUS, type AvatarShape } from "@/lib/avatar-shape";
 import { DISPLAY_FONT_STACK, type ThemeConfig } from "@/lib/themes";
 
 type PreviewLink = { title: string; featured: boolean };
 
+// The preview is a miniature, so the tiles are too — 32px against the live
+// page's 42px, in proportion with the shrunken avatar and link rows.
+const SOCIAL_TILE_SIZE = 32;
+
 /**
  * A miniature of the real public page, drawn from the same
  * `buttonStyleVariant` and `[data-pattern]` rules the live page uses — so a
  * control that looks right here is right there. It shows the owner's own
- * name, picture and first few link titles rather than lorem ipsum, because
+ * name, picture, first few link titles and social icons rather than lorem
+ * ipsum, because
  * the question being answered is "how does *my* page look".
  */
 export function ProfilePreview({
@@ -21,6 +28,7 @@ export function ProfilePreview({
   displayName,
   bio,
   links,
+  socials,
 }: {
   config: ThemeConfig;
   avatarShape: AvatarShape;
@@ -29,6 +37,8 @@ export function ProfilePreview({
   displayName: string;
   bio: string | null;
   links: PreviewLink[];
+  /** Platform names only — the preview draws glyphs, never real links. */
+  socials: string[];
 }) {
   const radius = AVATAR_SHAPE_RADIUS[avatarShape];
   const initial = displayName.trim().charAt(0).toUpperCase() || "?";
@@ -116,6 +126,23 @@ export function ProfilePreview({
           );
         })}
       </div>
+
+      {socials.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          {socials.map((platform, index) => (
+            <span
+              key={`${platform}-${index}`}
+              aria-hidden
+              style={socialIconStyle(
+                { surface: config.surface, ink: config.ink },
+                SOCIAL_TILE_SIZE,
+              )}
+            >
+              <SocialIcon platform={platform} />
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

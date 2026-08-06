@@ -12,7 +12,6 @@ import {
 } from "@/lib/themes";
 import LinkButton from "./_components/LinkButton";
 import SensitiveGate from "./_components/SensitiveGate";
-import SaveContact from "./_components/SaveContact";
 import SocialIcons from "./_components/SocialIcons";
 import ViewBeacon from "./_components/ViewBeacon";
 
@@ -142,8 +141,6 @@ export default async function ProfilePage({
     parseStoredThemeConfig(profile.themeConfig),
   );
 
-  const emailSocial = profile.socialLinks.find((s) => s.platform === "email");
-
   const containerStyle: ProfileCSSVars = {
     "--pt-bg": theme.background,
     "--pt-surface": theme.surface,
@@ -190,15 +187,6 @@ export default async function ProfilePage({
       ))}
 
       <SocialIcons socials={profile.socialLinks} />
-
-      <div className="mt-2 flex justify-center">
-        <SaveContact
-          username={profile.username}
-          displayName={profile.displayName}
-          bio={profile.bio}
-          email={emailSocial?.url ?? null}
-        />
-      </div>
     </div>
   );
 

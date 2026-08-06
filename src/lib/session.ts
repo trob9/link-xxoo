@@ -16,7 +16,7 @@ export const requireProfile = cache(async () => {
   const user = await requireUser();
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
-    include: { user: { select: { discordAvatar: true } } },
+    include: { user: { select: { providerAvatar: true } } },
     // avatarImage is a binary blob — every dashboard page calls
     // requireProfile(), but only the settings page needs the image bytes,
     // which it fetches itself. Leaving it out here keeps the common path lean.
