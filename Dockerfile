@@ -2,7 +2,7 @@
 # Debian-based (not alpine) throughout so the better-sqlite3 native addon
 # doesn't need a musl rebuild at runtime.
 
-FROM node:22-bookworm-slim AS deps
+FROM node:24-trixie-slim AS deps
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
@@ -15,14 +15,14 @@ RUN npm ci
 # `dotenv` are real dependencies, so this still pulls in everything
 # `prisma migrate deploy` needs to load prisma.config.ts (@prisma/config's
 # own transitive deps, e.g. c12 -> jiti, come along automatically).
-FROM node:22-bookworm-slim AS prod-deps
+FROM node:24-trixie-slim AS prod-deps
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-FROM node:22-bookworm-slim AS builder
+FROM node:24-trixie-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -30,7 +30,7 @@ RUN npx prisma generate
 ENV DOCKER_BUILD=1
 RUN npm run build
 
-FROM node:22-bookworm-slim AS runner
+FROM node:24-trixie-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # bookworm-slim ships without libssl; Prisma's schema engine
@@ -38,7 +38,7 @@ ENV NODE_ENV=production
 # and without it Prisma tries to fetch a different engine at runtime and
 # fails ("Can't write to node_modules/@prisma/engines") since it runs as the
 # unprivileged nextjs user. Installing openssl lets it use the bundled engine.
-RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 1001 nextjs
 
