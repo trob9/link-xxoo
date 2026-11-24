@@ -1,11 +1,12 @@
-# Multi-stage build for a self-hosted deploy (mini-PC / any Docker host).
-# Debian-based (not alpine) throughout so the better-sqlite3 native addon
-# doesn't need a musl rebuild at runtime.
+# Multi-stage build for a self-hosted deploy (any Docker host).
+# Alpine (musl) runtime: the Debian base carries OS-package CVEs that have no
+# upstream fix, Alpine does not. better-sqlite3, sharp and Prisma's schema
+# engine all ship musl builds; compilers are only installed in the build
+# stages (as a fallback if a prebuilt binary is missing).
 
-FROM node:24-trixie-slim AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
-  && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python3 make g++ openssl
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -13,46 +14,45 @@ RUN npm ci
 # (typescript, vitest, playwright, eslint, ...) that the app never needs at
 # runtime. `prisma`, `@prisma/client`, `@prisma/adapter-better-sqlite3`, and
 # `dotenv` are real dependencies, so this still pulls in everything
-# `prisma migrate deploy` needs to load prisma.config.ts (@prisma/config's
-# own transitive deps, e.g. c12 -> jiti, come along automatically).
-FROM node:24-trixie-slim AS prod-deps
+# `prisma migrate deploy` needs to load prisma.config.ts.
+FROM node:24-alpine AS prod-deps
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
-  && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python3 make g++ openssl
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-FROM node:24-trixie-slim AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
 ENV DOCKER_BUILD=1
 RUN npm run build
 
-FROM node:24-trixie-slim AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-# bookworm-slim ships without libssl; Prisma's schema engine
-# (schema-engine-debian-openssl-3.0.x, bundled in @prisma/engines) needs it,
-# and without it Prisma tries to fetch a different engine at runtime and
-# fails ("Can't write to node_modules/@prisma/engines") since it runs as the
-# unprivileged nextjs user. Installing openssl lets it use the bundled engine.
-RUN apt-get update && apt-get -y upgrade && apt-get install -y --no-install-recommends openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-RUN useradd --system --uid 1001 nextjs
+# openssl: Prisma's schema engine (linux-musl-openssl-3.0.x, bundled in
+# @prisma/engines) needs libssl; without it Prisma tries to download another
+# engine at runtime and fails as the unprivileged user.
+# npm/npx/corepack/yarn are removed from the runtime image: the entrypoint runs the
+# local prisma binary directly, and npm bundles its own (CVE-prone) dependencies.
+RUN apk upgrade --no-cache && apk add --no-cache openssl \
+  && adduser -S -u 1001 -H nextjs \
+  && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 # Standalone's own node_modules is pruned to just the Next.js server's
-# runtime deps and doesn't include the prisma CLI — layer the full prod
+# runtime deps and doesn't include the prisma CLI - layer the full prod
 # install on top so `prisma migrate deploy` in the entrypoint also works.
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh && mkdir -p /app/data && chown -R nextjs:nextjs /app/data
+RUN chmod +x ./docker-entrypoint.sh && mkdir -p /app/data && chown -R nextjs /app/data
 
 USER nextjs
 EXPOSE 3000
