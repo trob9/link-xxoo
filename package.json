@@ -40,7 +40,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.5",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.1"
   },
   "overrides": {
     "effect": "3.22.5"
