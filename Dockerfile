@@ -4,7 +4,7 @@
 # engine all ship musl builds; compilers are only installed in the build
 # stages (as a fallback if a prebuilt binary is missing).
 
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++ openssl
 COPY package.json package-lock.json ./
@@ -15,13 +15,13 @@ RUN npm ci
 # runtime. `prisma`, `@prisma/client`, `@prisma/adapter-better-sqlite3`, and
 # `dotenv` are real dependencies, so this still pulls in everything
 # `prisma migrate deploy` needs to load prisma.config.ts.
-FROM node:24-alpine AS prod-deps
+FROM node:26-alpine AS prod-deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++ openssl
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
@@ -30,7 +30,7 @@ RUN npx prisma generate
 ENV DOCKER_BUILD=1
 RUN npm run build
 
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # openssl: Prisma's schema engine (linux-musl-openssl-3.0.x, bundled in
